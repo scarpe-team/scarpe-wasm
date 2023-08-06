@@ -1,24 +1,26 @@
 # Scarpe::Wasm
 
-TODO: Delete this and the text below, and describe your gem
+Scarpe is a re-implementation of the Shoes GUI library for Ruby with more modern dependencies and with support for current Ruby versions. Scarpe supports different swappable display libraries, allowing it to run with various devices.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/scarpe/wasm`. To experiment with that code, run `bin/console` for an interactive prompt.
+Using Scarpe you can turn a few lines of code into a small GUI application.
+
+The Wasm display library for Scarpe was initially written by Giovanni Borgh, and adopted by the Scarpe team generally.
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
 Install the gem and add to the application's Gemfile by executing:
 
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
+    $ bundle add scarpe-wasm
 
 If bundler is not being used to manage dependencies, install the gem by executing:
 
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
+    $ gem install scarpe-wasm
 
 ## Usage
 
-TODO: Write usage instructions here
+To run a Shoes app via Scarpe-Wasm...
+
+(TBA, explain using wasify)
 
 ## Development
 

@@ -2,9 +2,12 @@
 
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in scarpe-wasm.gemspec
+# Specify your gem's dependencies in scarpe-folio.gemspec
 gemspec
 
-gem "rake", "~> 13.0"
+gem "scarpe", path: "../scarpe"
 
-gem "minitest", "~> 5.0"
+group :development do
+  gem "rake", "~> 13.0"
+  gem "minitest", "~> 5.0"
+end

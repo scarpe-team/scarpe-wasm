@@ -6,3 +6,11 @@
 /pkg/
 /spec/reports/
 /tmp/
+Gemfile.lock
+scarpe_results.txt
+**/.DS_Store
+logger/*.log
+/docs/yard/template/default/doc
+/docs/yard/template/default/.yardoc
+*.gem
+**/lacci-*.gem
