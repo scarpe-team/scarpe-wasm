@@ -1,3 +1,9 @@
+GIT
+  remote: git@github.com:AlawysDelta/wasify.git
+  revision: 3001731567a3663390604eacc0cb4d97a568a46b
+  specs:
+    wasify (0.1.0)
+
 PATH
   remote: ../scarpe
   specs:
@@ -16,6 +22,7 @@ PATH
   remote: .
   specs:
     scarpe-wasm (0.1.0)
+      wasify
 
 GEM
   remote: https://rubygems.org/
@@ -51,8 +58,12 @@ GEM
       multi_json (~> 1.14)
     matrix (0.4.2)
     method_source (1.0.0)
+    mini_portile2 (2.8.4)
     minitest (5.19.0)
     multi_json (1.15.0)
+    nokogiri (1.15.3)
+      mini_portile2 (~> 2.8.2)
+      racc (~> 1.4)
     nokogiri (1.15.3-x86_64-darwin)
       racc (~> 1.4)
     os (1.1.4)
@@ -62,6 +73,8 @@ GEM
     racc (1.7.1)
     rake (13.0.6)
     rouge (3.30.0)
+    sqlite3 (1.6.3)
+      mini_portile2 (~> 2.8.0)
     sqlite3 (1.6.3-x86_64-darwin)
     super_module (1.4.1)
       method_source (>= 0.8.2, < 1.1.0)
@@ -71,6 +84,7 @@ GEM
       rake
 
 PLATFORMS
+  wasm32-unknown
   x86_64-darwin-22
 
 DEPENDENCIES
@@ -78,6 +92,7 @@ DEPENDENCIES
   rake (~> 13.0)
   scarpe!
   scarpe-wasm!
+  wasify!
 
 BUNDLED WITH
    2.4.14

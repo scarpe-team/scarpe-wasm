@@ -6,7 +6,33 @@ Using Scarpe you can turn a few lines of code into a small GUI application.
 
 The Wasm display library for Scarpe was initially written by Giovanni Borgh, and adopted by the Scarpe team generally.
 
+Scarpe-Wasm is under very active development. You should expect everything about it to change rapidly, with limited stability, for the foreseeable future. If you want to use it for yourself, consider forking it or joining the team in developing it.
+
 ## Installation
+
+You'll need to [install wasi-vfs](https://github.com/kateinoigakukun/wasi-vfs#installation) for this library to work.
+
+Here's how that's done for the specific current version needed by wasify:
+
+``` bash
+$ export WASI_VFS_VERSION=0.1.1
+
+# For x86_64 Linux host machine
+$ curl -LO "https://github.com/kateinoigakukun/wasi-vfs/releases/download/v${WASI_VFS_VERSION}/wasi-vfs-cli-x86_64-unknown-linux-gnu.zip"
+$ unzip wasi-vfs-cli-x86_64-unknown-linux-gnu.zip
+
+# For x86_64 macOS host machine
+$ curl -LO "https://github.com/kateinoigakukun/wasi-vfs/releases/download/v${WASI_VFS_VERSION}/wasi-vfs-cli-x86_64-apple-darwin.zip"
+$ unzip wasi-vfs-cli-x86_64-apple-darwin.zip
+
+# For arm64 macOS host machine
+$ curl -LO "https://github.com/kateinoigakukun/wasi-vfs/releases/download/v${WASI_VFS_VERSION}/wasi-vfs-cli-aarch64-apple-darwin.zip"
+$ unzip wasi-vfs-cli-aarch64-apple-darwin.zip
+
+# See release page for more platforms: https://github.com/kateinoigakukun/wasi-vfs/releases
+
+$ mv wasi-vfs /usr/local/bin/wasi-vfs
+```
 
 Install the gem and add to the application's Gemfile by executing:
 
@@ -18,9 +44,44 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
 ## Usage
 
+To run a Shoes app via Scarpe-Wasm you'll need to create a script directory and install everything locally. We'll use button_alert.rb as an example.
+
+``` bash
+$ mkdir button_alert_app
+
+$ vi Gemfile
+===
+source "https://rubygems.org"
+
+# For now, these gems must be installed locally, with the exact correct version
+#gem "scarpe-wasm", path: "../scarpe-wasm"
+gem "scarpe"
+gem "wasify"
+===
+$ mkdir src
+$ cp ~/button_alert.rb src/
+$ vi src/run_app.rb
+===
+#!/usr/bin/env ruby
+
+ENV['SCARPE_DEBUG'] = 'true'
+require "scarpe"
+
+load __DIR__ + "/button_alert.rb"
+===
+$ bundle
+$ wasify run_app.rb # do not include src/
+$ ls # should see index.html and packed_ruby.wasm
+Gemfile         index.html      src
+Gemfile.lock        packed_ruby.wasm
+$ ruby -run -e httpd . -p 8080  # must be this port specifically
+```
+
 To run a Shoes app via Scarpe-Wasm...
 
 (TBA, explain using wasify)
+
+Please see "Installation" for more details about installing Scarpe-Wasm and the wasi-vfs library it depends on.
 
 ## Development
 
