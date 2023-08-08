@@ -323,6 +323,9 @@ class Scarpe
       monkey_patch_console(@wasm)
 
       @is_running = true
+
+      # In a normal GUI library, this would hand control to a different event loop
+      # and never return.
       @wasm.run
     end
 
