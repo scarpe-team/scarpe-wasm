@@ -53,33 +53,28 @@ $ vi Gemfile
 ===
 source "https://rubygems.org"
 
-# For now, these gems must be installed locally, with the exact correct version
-#gem "scarpe-wasm", path: "../scarpe-wasm"
-gem "scarpe"
+# These gems can be installed at a path or git branch if you're doing development.
+# Remember that lacci should also be specified if you're modifying it.
+gem "scarpe-components"
+gem "scarpe-wasm"
 gem "wasify"
 ===
+
 $ mkdir src
 $ cp ~/button_alert.rb src/
-$ vi src/run_app.rb
+$ vi src/button_alert.rb
 ===
-#!/usr/bin/env ruby
-
-ENV['SCARPE_DEBUG'] = 'true'
-require "scarpe"
-
-load __dir__ + "/button_alert.rb"
+require "scarpe-wasm" # currently need to add this in front of the source file
 ===
 $ bundle
-$ wasify run_app.rb # do not include src/
+$ bundle exec wasify src/button_alert.rb
 $ ls # should see index.html and packed_ruby.wasm
 Gemfile         index.html      src
 Gemfile.lock        packed_ruby.wasm
 $ ruby -run -e httpd . -p 8080  # must be this port specifically
 ```
 
-To run a Shoes app via Scarpe-Wasm...
-
-(TBA, explain using wasify)
+Then connect to localhost:8080 using your browser! The Wasm-based Scarpe app will be running.
 
 Please see "Installation" for more details about installing Scarpe-Wasm and the wasi-vfs library it depends on.
 
