@@ -2,7 +2,7 @@
 
 # Scarpe WASM Display Services
 
-require_relative "wasm/wasm_version"
+require_relative "wasm/version"
 
 require_relative "wasm/wasm_calls"
 require_relative "wasm/web_wrangler"

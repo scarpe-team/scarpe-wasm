@@ -9,7 +9,7 @@ require "cgi"
 
 class Scarpe
   class WebWrangler
-    include Scarpe::Log
+    include Shoes::Log
 
     attr_reader :is_running
     attr_reader :is_terminated
@@ -445,7 +445,7 @@ end
 class Scarpe
   class WebWrangler
     class DOMWrangler
-      include Scarpe::Log
+      include Shoes::Log
 
       attr_reader :waiting_changes
 

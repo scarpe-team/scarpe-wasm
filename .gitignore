@@ -6,7 +6,7 @@
 /pkg/
 /spec/reports/
 /tmp/
-/root/
+/deps/
 Gemfile.lock
 scarpe_results.txt
 **/.DS_Store

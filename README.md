@@ -67,7 +67,7 @@ $ vi src/run_app.rb
 ENV['SCARPE_DEBUG'] = 'true'
 require "scarpe"
 
-load __DIR__ + "/button_alert.rb"
+load __dir__ + "/button_alert.rb"
 ===
 $ bundle
 $ wasify run_app.rb # do not include src/

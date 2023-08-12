@@ -1,5 +1,16 @@
 # frozen_string_literal: true
 
+ENV['SCARPE_DEBUG'] = 'true'
+ENV['SCARPE_DISPLAY_SERVICE'] = "wasm_local"
+
+require "shoes"
+require "lacci/scarpe_core"
+
+# For Wasm, use simple no-dependency printing logger
+require "scarpe/print_logger"
+Shoes::Log.instance = Scarpe::PrintLogImpl.new
+Shoes::Log.configure_logger(Shoes::Log::DEFAULT_LOG_CONFIG)
+
 require_relative "wasm"
 require_relative "wasm/wasm_local_display"
 

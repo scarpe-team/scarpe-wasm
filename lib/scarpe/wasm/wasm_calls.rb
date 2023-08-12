@@ -4,7 +4,7 @@ require "js"
 
 class Scarpe
   class WASMInterops
-    include Scarpe::Log
+    include Shoes::Log
 
     def initialize
       log_init("WASM")

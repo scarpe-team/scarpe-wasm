@@ -34,8 +34,9 @@ Gem::Specification.new do |spec|
   # Uncomment to register a new dependency of your gem
   # spec.add_dependency "example-gem", "~> 1.0"
 
-  spec.add_dependency "wasify"
-  spec.add_dependency "scarpe"
+  #spec.add_dependency "wasify"
+  spec.add_dependency "scarpe-components"
+  spec.add_dependency "lacci"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html
