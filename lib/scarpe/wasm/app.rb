@@ -63,10 +63,10 @@ class Scarpe
     def run
       @control_interface.dispatch_event(:init)
 
+      # This takes control of the main thread and never returns. And it *must* be run from
+      # the main thread. And it stops any Ruby background threads.
+      # That's totally cool and normal, right?
       @view.run
-
-      # Alert the Shoes::App that we're going to return -- please don't destroy us.
-      send_shoes_event("return", event_name: "custom_event_loop")
     end
 
     def destroy

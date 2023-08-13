@@ -40,7 +40,7 @@ class Scarpe
     EVAL_RESULT = "scarpeAsyncEvalResult"
 
     # Allow a half-second for wasm to finish our JS eval before we decide it's not going to
-    EVAL_DEFAULT_TIMEOUT = 1.5
+    EVAL_DEFAULT_TIMEOUT = 0.5
 
     def initialize(title:, width:, height:, resizable: false, debug: false, heartbeat: 0.1)
       log_init("WASM::WebWrangler")
@@ -153,7 +153,7 @@ class Scarpe
     def js_eventually(code)
       raise "WebWrangler isn't running, eval doesn't work!" unless @is_running
 
-      # @log.warning "Deprecated: please do NOT use js_eventually, it's basically never what you want!" unless ENV["CI"]
+      # @log.warn "Deprecated: please do NOT use js_eventually, it's basically never what you want!" unless ENV["CI"]
 
       @wasm.eval(code)
     end
@@ -320,12 +320,9 @@ class Scarpe
       @wasm.set_size(@width, @height, hint)
       @wasm.navigate("data:text/html, #{empty}")
 
-      monkey_patch_console(@wasm)
+      # monkey_patch_console(@wasm)
 
       @is_running = true
-
-      # In a normal GUI library, this would hand control to a different event loop
-      # and never return.
       @wasm.run
     end
 
@@ -636,7 +633,7 @@ class Scarpe
       # Put together the waiting changes into a new in-flight redraw request.
       # Return it as a promise.
       def schedule_waiting_changes
-        # return if @waiting_changes.empty?
+        return if @waiting_changes.empty?
 
         js_code = @waiting_changes.join(";")
         @waiting_changes = [] # They're not waiting any more!
@@ -674,9 +671,33 @@ class Scarpe
         @webwrangler.dom_change("document.getElementById(\"" + html_id + "\").innerHTML = `" + new_html + "`; true")
       end
 
+      # Update the JS DOM element's inner_html. The given Ruby value will be inspected and assigned.
+      #
+      # @param attribute [String] the attribute name
+      # @param value [String] the new attribute value
+      # @return [Scarpe::Promise] a promise that will be fulfilled when the change is complete
+      def set_attribute(attribute, value)
+        @webwrangler.dom_change("document.getElementById(\"" + html_id + "\").setAttribute(" + attribute.inspect + "," + value.inspect + "); true")
+      end
+
+      # Update an attribute of the JS DOM element's style. The given Ruby value will be inspected and assigned.
+      #
+      # @param style_attr [String] the style attribute name
+      # @param value [String] the new style attribute value
+      # @return [Scarpe::Promise] a promise that will be fulfilled when the change is complete
+      def set_style(style_attr, value)
+        @webwrangler.dom_change("document.getElementById(\"" + html_id + "\").style.#{style_attr} = " + value.inspect + "; true")
+      end
+
       def remove
         @webwrangler.dom_change("document.getElementById('" + html_id + "').remove(); true")
       end
+
+      def toggle_input_button(mark)
+        checked_value = mark ? "true" : "false"
+        @webwrangler.dom_change("document.getElementById('#{html_id}').checked = #{checked_value};")
+      end
+
     end
   end
 end
