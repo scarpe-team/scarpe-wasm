@@ -7,7 +7,7 @@
 /spec/reports/
 /tmp/
 /deps/
-Gemfile.lock
+/test/cache/
 scarpe_results.txt
 **/.DS_Store
 logger/*.log
