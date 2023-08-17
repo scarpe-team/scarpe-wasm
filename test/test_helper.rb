@@ -52,7 +52,7 @@ class WasmPackageTestCase < CapybaraTestCase
     FileUtils.touch "src/APP_NAME.rb" # Use this to have a boilerplate name to search/replace
 
     # Need to use the TEST_CACHE_DIR Bundler env, *not* the one for the test harness.
-    Bundler.with_clean_env do
+    Bundler.with_unbundled_env do
       system("bundle exec wasify src/APP_NAME.rb") || raise("Couldn't wasify-build!")
     end
     @index_contents = File.read("index.html")

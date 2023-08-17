@@ -63,6 +63,8 @@ class Scarpe
     def run
       @control_interface.dispatch_event(:init)
 
+      send_shoes_event("return", event_name: "custom_event_loop")
+
       # This takes control of the main thread and never returns. And it *must* be run from
       # the main thread. And it stops any Ruby background threads.
       # That's totally cool and normal, right?
