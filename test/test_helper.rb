@@ -6,6 +6,7 @@ ENV["SCARPE_DISPLAY_SERVICE"] ||= "wasm"
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 require "fileutils"
+require "socket"
 
 require "scarpe/unit_test_helpers"
 
@@ -39,6 +40,8 @@ class WasmPackageTestCase < CapybaraTestCase
   TEST_CACHE_DIR = File.expand_path(File.join __dir__, "../test/cache")
   TEST_CACHE_WASM = File.join(TEST_CACHE_DIR, "packed_ruby.wasm")
 
+  MAX_SERVER_STARTUP_WAIT = 5.0
+
   def setup
     super if defined?(super)
 
@@ -55,9 +58,29 @@ class WasmPackageTestCase < CapybaraTestCase
     Bundler.with_unbundled_env do
       system("bundle exec wasify src/APP_NAME.rb") || raise("Couldn't wasify-build!")
     end
-    @index_contents = File.read("index.html")
 
     TEST_DATA[:wasm_built] = true
+  end
+
+  def port_open?(ip, port_num)
+    begin
+      TCPSocket.new(ip, port_num)
+    rescue Errno::ECONNREFUSED
+      return false
+    end
+    return true
+  end
+
+  def wait_until_port_open(ip, port_num)
+    t_start = Time.now
+    loop do
+      if Time.now - t_start > MAX_SERVER_STARTUP_WAIT
+        raise "Server on port #{port_num} didn't start up in time!"
+      end
+
+      sleep 0.1
+      return if port_open?(ip, port_num)
+    end
   end
 
   def with_app_server(app_name, &block)
@@ -67,8 +90,9 @@ class WasmPackageTestCase < CapybaraTestCase
     Dir.chdir(TEST_CACHE_DIR) do
       File.write("src/#{app_name}.rb", File.read("#{TEST_CACHE_DIR}/../examples/#{app_name}.rb"))
       index_name = "index_#{app_name}.html"
-      File.write(index_name, @index_contents.gsub("APP_NAME", app_name))
+      File.write(index_name, File.read("index.html").gsub("APP_NAME", app_name))
       server_pid = Kernel.spawn("bundle exec ruby -run -e httpd . -p 8080")
+      wait_until_port_open("127.0.0.1", 8080)
 
       yield(index_name)
     end
