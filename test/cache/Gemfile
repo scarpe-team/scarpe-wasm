@@ -1,0 +1,10 @@
+source "https://rubygems.org"
+
+# These gems can be installed at a path or git branch if you're doing development.
+# Remember that lacci should also be specified if you're modifying it.
+gem "scarpe-components", path: "../../../scarpe/scarpe-components"
+gem "lacci", path: "../../../scarpe/lacci"
+gem "scarpe-wasm", path: "../.."
+gem "wasify", path: "../../../wasify"
+
+gem "webrick" # to use "ruby -run -e httpd"
