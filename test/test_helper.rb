@@ -103,6 +103,8 @@ class WasmPackageTestCase < CapybaraTestCase
   def with_app(app_file)
     with_app_server(app_file) do |index_file|
       visit("/#{index_file}")
+      assert_selector("#wrapper-wvroot", wait: 5)
+      assert_selector("#wrapper-wvroot div", wait: 5)
       yield
     end
   end

@@ -22,6 +22,16 @@ class Scarpe::TestUnifiedPackageWasm < WasmPackageTestCase
       assert_no_text("Aha!")
       click_button("Push me")
       assert_text("Aha!")
+    end
+  end
+
+  def test_widgets_exist
+    with_app("widgets_basic") do
+      assert_selector("button", wait: 5)
+      assert_text("Here I am")
+      assert_text("Push me")
+      assert_text("I am an alert")
+      #assert_text("edit_line here")
 
       #STDERR.puts "PAGE:\n#{page.html}"
     end
