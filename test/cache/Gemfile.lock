@@ -1,17 +1,22 @@
-PATH
-  remote: ../../../scarpe/lacci
+GIT
+  remote: https://github.com/AlawysDelta/wasify.git
+  revision: 3f455dac7a2bfc4b76a7976c7a1c39a09d2ec2fd
+  specs:
+    wasify (0.1.1)
+
+GIT
+  remote: https://github.com/scarpe-team/scarpe.git
+  revision: 599a3fbe763a500507b1ce9a91f60abe0755707b
+  glob: lacci/*.gemspec
   specs:
     lacci (0.2.1)
 
-PATH
-  remote: ../../../scarpe/scarpe-components
+GIT
+  remote: https://github.com/scarpe-team/scarpe.git
+  revision: 599a3fbe763a500507b1ce9a91f60abe0755707b
+  glob: scarpe-components/*.gemspec
   specs:
     scarpe-components (0.2.1)
-
-PATH
-  remote: ../../../wasify
-  specs:
-    wasify (0.1.1)
 
 PATH
   remote: ../..
