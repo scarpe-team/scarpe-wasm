@@ -36,6 +36,7 @@ TEST_DATA = {
   wasm_built: false,
 }
 
+# This ensures that a combined package is built for testing, once per test process.
 class WasmPackageTestCase < CapybaraTestCase
   TEST_CACHE_DIR = File.expand_path(File.join __dir__, "../test/cache")
   TEST_CACHE_WASM = File.join(TEST_CACHE_DIR, "packed_ruby.wasm")
@@ -111,7 +112,7 @@ class WasmPackageTestCase < CapybaraTestCase
 
 end
 
-# Make sure server gets shut down
+# Any final shutdown?
 Minitest.after_run do
 end
 
