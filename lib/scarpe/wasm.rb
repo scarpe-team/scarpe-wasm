@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
-# Scarpe WASM Display Services
+# Scarpe WASM Display Service
+
+# This file should be required on the Wasm side, not the Ruby side.
+# So it's used to link to JS, and to instantiate widgets, but not
+# for e.g. packaging.
 
 require_relative "wasm/version"
 
