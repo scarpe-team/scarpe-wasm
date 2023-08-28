@@ -1,0 +1,44 @@
+GIT
+  remote: https://github.com/AlawysDelta/wasify.git
+  revision: 3f455dac7a2bfc4b76a7976c7a1c39a09d2ec2fd
+  specs:
+    wasify (0.1.1)
+
+GIT
+  remote: https://github.com/scarpe-team/scarpe-wasm.git
+  revision: 7f47d8ac5456f4debed36ac22e86940b34045068
+  specs:
+    scarpe-wasm (0.1.0)
+      lacci
+      scarpe-components
+
+GIT
+  remote: https://github.com/scarpe-team/scarpe.git
+  revision: 296af9b72b21301fe89da6b096d1009966c0baf8
+  glob: lacci/*.gemspec
+  specs:
+    lacci (0.2.1)
+
+GIT
+  remote: https://github.com/scarpe-team/scarpe.git
+  revision: 296af9b72b21301fe89da6b096d1009966c0baf8
+  glob: scarpe-components/*.gemspec
+  specs:
+    scarpe-components (0.2.1)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+
+PLATFORMS
+  wasm32-unknown
+  x86_64-darwin-22
+
+DEPENDENCIES
+  lacci!
+  scarpe-components!
+  scarpe-wasm!
+  wasify!
+
+BUNDLED WITH
+   2.4.14

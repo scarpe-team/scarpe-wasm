@@ -17,3 +17,5 @@ logger/*.log
 **/lacci-*.gem
 ruby.wasm
 ruby-3_2-wasm32-*.tar.gz
+default_package/*.rb
+default_package/*.bak

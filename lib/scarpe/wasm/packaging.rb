@@ -12,7 +12,7 @@ module Scarpe::Wasm::Packaging
   # Create a Package object for the default built-wasm Package, used to run
   # random scarpe-wasm applications.
   def self.default_package
-    Package.new(app_dir: default_package_dir, install_dir: scarpe_cache_dir + "/default")
+    @default_package ||= Package.new(app_dir: default_package_dir, install_dir: scarpe_cache_dir + "/default")
   end
 
   # The cache directory under the user home directory where built wasm and
@@ -22,13 +22,27 @@ module Scarpe::Wasm::Packaging
       raise "Can't find $HOME for default Wasm install directory!"
     end
 
-    "#{ENV['HOME']}/.scarpe-wasm"
+    File.expand_path "#{ENV['HOME']}/.scarpe-wasm"
   end
 
   # Scarpe-Wasm includes a default package, used to create the built wasm
   # for running random Scarpe-Wasm apps. This is the directory containing it.
   def self.default_package_dir
-    File.expand_path(__dir__ + "../default_package")
+    File.expand_path(__dir__ + "/../../../default_package")
+  end
+
+  def self.ensure_default_build
+    return if @checked_default_build
+
+    packed_file = scarpe_cache_dir + "/default/packed_ruby.wasm"
+    one_week = 7 * 24 * 60 * 60
+
+    if !File.exist?(packed_file) || (Time.now - File.mtime(packed_file) > one_week)
+      default_package.use_defaults
+      default_package.build
+    end
+
+    @checked_default_build = true
   end
 
   # This class is designed to build a package -- either a default package or
@@ -85,7 +99,9 @@ module Scarpe::Wasm::Packaging
         end
 
         # Ensure gems are installed and Gemfile.lock is fully up-to-date
-        system("bundle install") || raise("Failed while running 'bundle install' in #{@app_dir.inspect}!")
+        Bundler.with_unbundled_env do
+          system("bundle install") || raise("Failed while running 'bundle install' in #{@app_dir.inspect}!")
+        end
 
         unless File.read("Gemfile.lock").include?("wasify")
           # Don't fail now, but this is probably going to fail when we attempt to package.
@@ -109,8 +125,29 @@ module Scarpe::Wasm::Packaging
           system("bundle exec wasify src/APP_NAME.rb") || raise("Couldn't build using wasify!")
         end
 
-        FileUtils.mv "packed.ruby", "index.html", @install_dir
+        FileUtils.mkdir_p @install_dir
+        FileUtils.mv "packed_ruby.wasm", @install_dir
+        FileUtils.mv "index.html", @install_dir
       end
+    end
+
+    # A built package file can be used to serve more or less arbitrary Shoes apps.
+    # But it needs an HTML index file to load the app, and the app must be available
+    # where an HTTP server can see it.
+    def build_app_index(app_file)
+      app_file_dir = File.dirname(app_file)
+      app_name = File.basename(app_file)
+      if app_file_dir != @app_dir
+        FileUtils.cp app_file, "#{@install_dir}/#{app_name}"
+      end
+
+      index_name = "index_#{app_name}.html"
+
+      index_contents = File.read "#{@install_dir}/index.html"
+      index_contents.gsub!("APP_NAME", app_name)
+      File.write "#{@install_dir}/#{index_name}", index_contents
+
+      index_name
     end
   end
 end

@@ -21,6 +21,7 @@ if use_dev
 end
 
 require "scarpe/wasm/packaging"
+require "scarpe/wasm/http_server"
 require "scarpe/components/version"
 
 require "shoes"
@@ -95,8 +96,16 @@ when "src-package"
   p.build
   puts "Built Wasm package, installed to #{p.install_dir}."
 when "run"
-  # Run the Scarpe app file
-  Shoes.run_app verb_target
+  unless File.exist?(verb_target)
+    raise "Can't find file: #{verb_target.inspect}!"
+  end
+  Scarpe::Wasm::Packaging.ensure_default_build
+  pkg = Scarpe::Wasm::Packaging.default_package
+  index_name = pkg.build_app_index(verb_target)
+  index_url = "http://localhost:8080/#{index_name}"
+  puts "URL: #{index_url}"
+  system("open -a \"Google Chrome\" #{index_url}")
+  Scarpe::Wasm::HTTPServer.new(dir: pkg.install_dir, port: 8080).start
 when "env"
   print_env
 else
