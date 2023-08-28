@@ -5,6 +5,7 @@
 # --dev option applies to all actions
 use_dev = ARGV.delete("--dev") ? true : false
 use_debug = ARGV.delete("--debug") ? true : false
+use_rebuild = ARGV.delete("--rebuild") ? true : false
 
 # Default to local webview display if not otherwise given
 ENV['SCARPE_DISPLAY'] ||= 'wasm_local'
@@ -43,6 +44,7 @@ def print_usage
       Options:
           --dev                          Use development local scarpe, not an installed gem
           --debug                        Turn on application debug mode
+          --rebuild                      Rebuild default-package code for run even if recent
   USAGE
 end
 
@@ -99,8 +101,13 @@ when "run"
   unless File.exist?(verb_target)
     raise "Can't find file: #{verb_target.inspect}!"
   end
-  Scarpe::Wasm::Packaging.ensure_default_build
   pkg = Scarpe::Wasm::Packaging.default_package
+  if use_rebuild
+    pkg.build
+  else
+    # This only makes sure there's a fairly recent build
+    Scarpe::Wasm::Packaging.ensure_default_build
+  end
   index_name = pkg.build_app_index(verb_target)
   index_url = "http://localhost:8080/#{index_name}"
   puts "URL: #{index_url}"
