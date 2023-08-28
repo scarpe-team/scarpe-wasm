@@ -131,6 +131,36 @@ module Scarpe::Wasm::Packaging
       end
     end
 
+    def app_index_text(app_file_url)
+      <<~INDEX_HTML
+        <html>
+        <script src="https://cdn.jsdelivr.net/npm/@ruby/wasm-wasi@latest/dist/browser.umd.js"></script>
+        <script>
+          const { DefaultRubyVM } = window["ruby-wasm-wasi"];
+          const main = async () => {
+            const response = await fetch(
+              "http://localhost:8080/packed_ruby.wasm");
+            const buffer = await response.arrayBuffer();
+            const module = await WebAssembly.compile(buffer);
+            const { vm } = await DefaultRubyVM(module);
+            const shoes_app = await fetch("#{app_file_url}");
+
+            vm.printVersion();
+            vm.eval(`require "bundler/setup"`);
+            shoes_code = await shoes_app.text();
+            console.log(shoes_code);
+            vm.eval(shoes_code);
+          };
+
+          main();
+        </script>
+
+        <body></body>
+
+        </html>
+      INDEX_HTML
+    end
+
     # A built package file can be used to serve more or less arbitrary Shoes apps.
     # But it needs an HTML index file to load the app, and the app must be available
     # where an HTTP server can see it.
@@ -143,8 +173,7 @@ module Scarpe::Wasm::Packaging
 
       index_name = "index_#{app_name}.html"
 
-      index_contents = File.read "#{@install_dir}/index.html"
-      index_contents.gsub!("APP_NAME", app_name)
+      index_contents = app_index_text("http://localhost:8080/#{app_name}")
       File.write "#{@install_dir}/#{index_name}", index_contents
 
       index_name
