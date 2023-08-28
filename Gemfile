@@ -5,9 +5,10 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in scarpe-folio.gemspec
 gemspec
 
-gem "scarpe-components", path: "../scarpe/scarpe-components"
+gem "scarpe-components", github: "scarpe-team/scarpe", glob: "scarpe-components/*.gemspec"
+gem "lacci", github: "scarpe-team/scarpe", glob: "lacci/*.gemspec"
 
-gem "wasify", path: "../wasify"
+gem "wasify", github: "AlawysDelta/wasify"
 
 gem "webrick"
 
