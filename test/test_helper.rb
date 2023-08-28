@@ -8,7 +8,7 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "fileutils"
 require "socket"
 
-require "scarpe/unit_test_helpers"
+require "scarpe/components/unit_test_helpers"
 
 ## Capybara Setup
 
