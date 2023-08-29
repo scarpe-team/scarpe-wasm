@@ -5,14 +5,6 @@ GIT
     wasify (0.1.1)
 
 GIT
-  remote: https://github.com/scarpe-team/scarpe-wasm.git
-  revision: 7f47d8ac5456f4debed36ac22e86940b34045068
-  specs:
-    scarpe-wasm (0.1.0)
-      lacci
-      scarpe-components
-
-GIT
   remote: https://github.com/scarpe-team/scarpe.git
   revision: 296af9b72b21301fe89da6b096d1009966c0baf8
   glob: lacci/*.gemspec
@@ -25,6 +17,13 @@ GIT
   glob: scarpe-components/*.gemspec
   specs:
     scarpe-components (0.2.1)
+
+PATH
+  remote: ..
+  specs:
+    scarpe-wasm (0.1.0)
+      lacci
+      scarpe-components
 
 GEM
   remote: https://rubygems.org/
