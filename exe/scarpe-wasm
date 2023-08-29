@@ -6,6 +6,8 @@
 use_dev = ARGV.delete("--dev") ? true : false
 use_debug = ARGV.delete("--debug") ? true : false
 use_rebuild = ARGV.delete("--rebuild") ? true : false
+use_prepack = ARGV.delete("--prepack") ? true : false
+use_help = ARGV.delete("--help") ? true : false
 
 # Default to local webview display if not otherwise given
 ENV['SCARPE_DISPLAY'] ||= 'wasm_local'
@@ -42,10 +44,17 @@ def print_usage
            scarpe-wasm [OPTIONS] env                          # print Scarpe environment settings
            scarpe-wasm -v                                     # print the Scarpe gem version and exit
       Options:
+          --help                         Print usage and exit
           --dev                          Use development local scarpe, not an installed gem
           --debug                        Turn on application debug mode
           --rebuild                      Rebuild default-package code for run even if recent
+          --prepack                      When building a package, keep a local unpacked dir for debugging
   USAGE
+end
+
+if use_help
+  print_usage
+  exit 0
 end
 
 add_env_categories("Scarpe::Wasm" => [
@@ -94,18 +103,23 @@ when "-v"
   puts "Scarpe-Components #{Scarpe::Components::VERSION}"
   puts "Lacci #{Lacci::VERSION}"
 when "src-package"
-  p = Scarpe::Wasm::Packaging::Package.new app_dir: verb_target
+  p = Scarpe::Wasm::Packaging::Package.new app_dir: verb_target, prepack: use_prepack
   p.build
   puts "Built Wasm package, installed to #{p.install_dir}."
 when "run"
-  unless File.exist?(verb_target)
-    raise "Can't find file: #{verb_target.inspect}!"
-  end
-  pkg = Scarpe::Wasm::Packaging.default_package
-  if use_rebuild
-    pkg.build
+  raise "Can't find file: #{verb_target.inspect}!" unless File.exist?(verb_target)
+
+  pkg = Scarpe::Wasm::Packaging.default_package(prepack: use_prepack)
+  # If you use --dev, need to rebuild the default package every time since it's local files.
+  # If we're using a path: or git: source, don't think there's an easy way to detect that
+  # and auto-rebuild every time.
+  if use_rebuild || use_dev
+    pkg.clean_app_dir
+    pkg.build(force: true)
   else
-    # This only makes sure there's a fairly recent build
+    # This makes sure there's a fairly recent build, but doesn't build if something recent exists.
+    # Note that it does *not* try to inspect the relevant framework dirs for changes, just checks
+    # how old the build file is.
     Scarpe::Wasm::Packaging.ensure_default_build
   end
   index_name = pkg.build_app_index(verb_target)
