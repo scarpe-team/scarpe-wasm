@@ -11,8 +11,8 @@ require "fileutils"
 module Scarpe::Wasm::Packaging
   # Create a Package object for the default built-wasm Package, used to run
   # random scarpe-wasm applications.
-  def self.default_package
-    @default_package ||= Package.new(app_dir: default_package_dir, install_dir: scarpe_cache_dir + "/default")
+  def self.default_package(prepack: false)
+    @default_package ||= Package.new(app_dir: default_package_dir, install_dir: scarpe_cache_dir + "/default", prepack:)
   end
 
   # The cache directory under the user home directory where built wasm and
@@ -55,9 +55,19 @@ module Scarpe::Wasm::Packaging
     #
     # @param app_dir [String] the directory containing application code and a Gemfile
     # @param install_dir [String] a directory to install the resulting built code to
-    def initialize(app_dir: Dir.pwd, install_dir: nil)
+    def initialize(app_dir: Dir.pwd, install_dir: nil, prepack: false)
       @app_dir = app_dir
       @install_dir = install_dir
+      @prepack = prepack
+    end
+
+    # Returns the directory of the prepack archive, if this package does prepacking.
+    # Returns nil for packages that don't prepack.
+    #
+    # @return [String] path to prepack directory
+    def prepack_dir
+      return nil unless @prepack
+
     end
 
     # Normally a package will supply its own source files and Gemfile.
@@ -84,7 +94,6 @@ module Scarpe::Wasm::Packaging
     # @param force [Boolean] re-run the setup even if it has already run in this process
     def setup(force: false)
       return if !force && @setup_done
-      @setup_done = true
 
       Dir.chdir @app_dir do
         src_dir = File.expand_path "#{@app_dir}/src"
@@ -108,27 +117,56 @@ module Scarpe::Wasm::Packaging
           puts "WARNING: your Gemfile does not include the wasify gem! It's needed for packaging."
         end
       end
+
+      @setup_done = true
+    end
+
+    # It's possible to wind up with weird files after a failed build, including odd
+    # permissions. Let's clean up all remaining files from previous builds so we can
+    # start from a clean slate. This doesn't re-do setup tasks like "bundle install",
+    # that's handled by {#build} and {#setup} steps.
+    def clean_app_dir
+      # We're blowing away all the build files.
+      @build_done = false
+
+      FileUtils.rm_rf "#{@app_dir}/3_2-wasm32-unknown-wasi-full-js"
+      FileUtils.rm_rf "#{@app_dir}/ruby-3_2-wasm32-unknown-wasi-full-js.tar.gz"
+      FileUtils.rm_rf "#{@app_dir}/deps"
+      FileUtils.rm_rf "#{@app_dir}/ruby.wasm"
+      FileUtils.rm_rf "#{@app_dir}/index.html"
+      bak_files = Dir.glob("#{@app_dir}/*.bak")
+      unless bak_files.empty?
+        FileUtils.rm_rf bak_files
+      end
     end
 
     # Build the package from its source files. Install it to its installation directory.
     #
     # @param force [Boolean] Build the package even if it has already been built by this process.
     def build(force: false)
-      setup
+      setup(force:)
 
       return if !force && @build_done
-      @build_done = true
 
       Dir.chdir @app_dir do
         # Need to use the TEST_CACHE_DIR Bundler env, *not* the one for the test harness.
         Bundler.with_unbundled_env do
-          system("bundle exec wasify src/APP_NAME.rb") || raise("Couldn't build using wasify!")
+          system("bundle exec wasify src/APP_NAME.rb") || raise("Couldn't build using wasify in #{File.expand_path(@app_dir)}!")
+
+          # If we prepack, we do *two* builds -- create the package, create the debug prepack.
+          # The prepack has to be done second because creating the regular build will wipe out
+          # the prepack output dir.
+          if @prepack
+            system("bundle exec wasify prepack") || raise("Couldn't prepack using wasify in #{File.expand_path(@app_dir)}!")
+          end
         end
 
         FileUtils.mkdir_p @install_dir
         FileUtils.mv "packed_ruby.wasm", @install_dir
         FileUtils.mv "index.html", @install_dir
       end
+
+      @build_done = true
     end
 
     def app_index_text(app_file_url)
