@@ -7,8 +7,8 @@ require "shoes"
 require "lacci/scarpe_core"
 
 # For Wasm, use simple no-dependency printing logger
-require "scarpe/print_logger"
-Shoes::Log.instance = Scarpe::PrintLogImpl.new
+require "scarpe/components/print_logger"
+Shoes::Log.instance = Scarpe::Components::PrintLogImpl.new
 Shoes::Log.configure_logger(Shoes::Log::DEFAULT_LOG_CONFIG)
 
 require_relative "wasm"
