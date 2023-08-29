@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "scarpe/base64"
+require "scarpe/components/base64"
 
 class Scarpe
   class WASMImage < WASMWidget
-    include Base64
+    include Components::Base64
     def initialize(properties)
       super
 
