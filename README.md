@@ -42,6 +42,18 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
     $ gem install scarpe-wasm
 
+## Usage: Running a Shoes App
+
+Wasm doesn't work quite like Shoes Classic. Instead, the various Ruby libraries are compiled to WebAssembly code to be run by your browser. As a result, running an application is a little bit different.
+
+In development you can run a Shoes app from the command line:
+
+```bash
+$ exe/scarpe-wasm --dev button_alert.rb
+```
+
+This will build a default Wasm package for the Scarpe libraries but no additional gems, and then start a web server running your application with that default package. It will also open a Google Chrome tab pointed at that server.
+
 ## Usage: Packaging a Wasm App
 
 Scarpe-Wasm allows you to package an application into packed Wasm code and an HTML loading page. Note that this won't work with gems that use native extensions - we can't easily translate them into WebAssembly.
