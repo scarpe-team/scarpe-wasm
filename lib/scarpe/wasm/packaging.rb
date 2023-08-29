@@ -146,7 +146,7 @@ module Scarpe::Wasm::Packaging
             const shoes_app = await fetch("#{app_file_url}");
 
             vm.printVersion();
-            vm.eval(`require "bundler/setup"`);
+            vm.eval(`require "bundler/setup"; require "scarpe/wasm_local"`);
             shoes_code = await shoes_app.text();
             console.log(shoes_code);
             vm.eval(shoes_code);
