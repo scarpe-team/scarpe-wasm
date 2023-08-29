@@ -34,6 +34,8 @@ $ unzip wasi-vfs-cli-x86_64-unknown-linux-gnu.zip
 $ mv wasi-vfs /usr/local/bin/wasi-vfs
 ```
 
+(Note: this is not the latest wasi-vfs, but there's a bug as of version 0.4.0 that prevents using the latest version with ruby.wasm.)
+
 Install the gem and add to the application's Gemfile by executing:
 
     $ bundle add scarpe-wasm
