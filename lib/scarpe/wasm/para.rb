@@ -40,7 +40,7 @@ class Scarpe
         if item.is_a?(String)
           item
         else
-          WASMDisplayService.instance.query_display_widget_for(item)
+          DisplayService.instance.query_display_widget_for(item)
         end
       end
     end

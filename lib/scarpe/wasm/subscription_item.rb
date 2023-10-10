@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Scarpe::WASMSubscriptionItem < Scarpe::WASMWidget
+class Scarpe::WASM::SubscriptionItem < Scarpe::WASM::Widget
   def initialize(properties)
     super
 

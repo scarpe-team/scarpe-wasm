@@ -7,7 +7,7 @@ require "cgi"
 # After creation, it starts in setup mode, and you can
 # use setup-mode callbacks.
 
-class Scarpe
+module Scarpe::WASM
   class WebWrangler
     include Shoes::Log
 
@@ -439,8 +439,7 @@ end
 # changes waiting to catch the next bus. But we don't want more than one in flight,
 # since it seems like having too many pending RPC requests can crash wasm. So:
 # one redraw scheduled and one redraw promise waiting around, at maximum.
-class Scarpe
-  class WebWrangler
+class Scarpe::WASM::WebWrangler
     class DOMWrangler
       include Shoes::Log
 
@@ -640,7 +639,6 @@ class Scarpe
         @wrangler.eval_js_async(js_code)
       end
     end
-  end
 end
 
 # For now we don't need one of these to add DOM elements, just to manipulate them
@@ -651,7 +649,7 @@ class Scarpe
       attr_reader :html_id
 
       def initialize(html_id)
-        @webwrangler = WASMDisplayService.instance.wrangler
+        @webwrangler = ::Scarpe::WASM::DisplayService.instance.wrangler
         @html_id = html_id
       end
 

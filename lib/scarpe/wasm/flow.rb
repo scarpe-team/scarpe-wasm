@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-class Scarpe
-  class WASMFlow < Scarpe::WASMSlot
+module Scarpe::WASM
+  class Flow < Slot
     def initialize(properties)
       super
     end

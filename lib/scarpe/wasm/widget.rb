@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-class Scarpe
+module Scarpe::WASM
   # The WASMWidget parent class helps connect a WASM widget with
   # its Shoes equivalent, render itself to the WASM DOM, handle
   # Javascript events and generally keep things working in WASM.
-  class WASMWidget < Shoes::Linkable
+  class Widget < Shoes::Linkable
     include Shoes::Log
 
     class << self
@@ -16,7 +16,7 @@ class Scarpe
             "linkable widgets, not #{scarpe_class_name.inspect}!"
         end
 
-        klass = Scarpe.const_get("WASM" + scarpe_class_name.split("::")[-1])
+        klass = Scarpe::WASM.const_get(scarpe_class_name.split("::")[-1])
         if klass.nil?
           raise "Couldn't find corresponding Scarpe WASM class for #{scarpe_class_name.inspect}!"
         end
@@ -39,6 +39,8 @@ class Scarpe
     def initialize(properties)
       log_init("WASM::Widget")
 
+      @display_property_names = properties.keys.map(&:to_s) - ["shoes_linkable_id"]
+
       # Call method, which looks up the parent
       @shoes_linkable_id = properties["shoes_linkable_id"] || properties[:shoes_linkable_id]
       unless @shoes_linkable_id
@@ -54,7 +56,7 @@ class Scarpe
 
       # The parent field is *almost* simple enough that a typed display property would handle it.
       bind_shoes_event(event_name: "parent", target: shoes_linkable_id) do |new_parent_id|
-        display_parent = WASMDisplayService.instance.query_display_widget_for(new_parent_id)
+        display_parent = DisplayService.instance.query_display_widget_for(new_parent_id)
         if @parent != display_parent
           set_parent(display_parent)
         end
@@ -73,6 +75,14 @@ class Scarpe
       end
 
       super(linkable_id: @shoes_linkable_id)
+    end
+
+    def display_properties
+      p = {}
+      @display_property_names.each do |prop_name|
+        p[prop_name] = instance_variable_get("@#{prop_name}")
+      end
+      p
     end
 
     # Properties_changed will be called automatically when properties change.
@@ -212,7 +222,7 @@ class Scarpe
     def bind(event, &block)
       raise("Widget has no linkable_id! #{inspect}") unless linkable_id
 
-      WASMDisplayService.instance.app.bind("#{linkable_id}-#{event}", &block)
+      DisplayService.instance.app.bind("#{linkable_id}-#{event}", &block)
     end
 
     # Removes the element from both the Ruby Widget tree and the HTML DOM.
@@ -232,7 +242,7 @@ class Scarpe
     #
     # @return [void]
     def needs_update!
-      WASMDisplayService.instance.app.request_redraw!
+      DisplayService.instance.app.request_redraw!
     end
 
     # Generate JS code to trigger a specific event name on this widget with the supplies arguments.

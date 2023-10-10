@@ -6,17 +6,19 @@ GIT
 
 GIT
   remote: https://github.com/scarpe-team/scarpe.git
-  revision: 296af9b72b21301fe89da6b096d1009966c0baf8
+  revision: c87b7d99629fa362ac7289189bba69d6ae515f09
+  branch: main
   glob: lacci/*.gemspec
   specs:
-    lacci (0.2.1)
+    lacci (0.2.2)
 
 GIT
   remote: https://github.com/scarpe-team/scarpe.git
-  revision: 296af9b72b21301fe89da6b096d1009966c0baf8
+  revision: c87b7d99629fa362ac7289189bba69d6ae515f09
+  branch: main
   glob: scarpe-components/*.gemspec
   specs:
-    scarpe-components (0.2.1)
+    scarpe-components (0.2.2)
 
 PATH
   remote: ..
@@ -32,6 +34,7 @@ GEM
 PLATFORMS
   wasm32-unknown
   x86_64-darwin-22
+  x86_64-linux
 
 DEPENDENCIES
   lacci!

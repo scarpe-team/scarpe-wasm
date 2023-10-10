@@ -10,7 +10,7 @@ class Scarpe
   # process, too many or too large evals can crash the process, etc.
   # Frequently it's better to use a RelayDisplayService to a second
   # process containing one of these.
-  class WASMDisplayService < Shoes::DisplayService
+  class WASM::DisplayService < Shoes::DisplayService
     include Shoes::Log
 
     class << self
@@ -32,14 +32,14 @@ class Scarpe
     # This is called before any of the various WASMWidgets are created, to be
     # able to create them and look them up.
     def initialize
-      if WASMDisplayService.instance
+      if WASM::DisplayService.instance
         raise "ERROR! This is meant to be a singleton!"
       end
 
-      WASMDisplayService.instance = self
+      WASM::DisplayService.instance = self
 
       super()
-      log_init("WASM::WASMDisplayService")
+      log_init("WASM::DisplayService")
 
       @display_widget_for = {}
     end
@@ -57,7 +57,7 @@ class Scarpe
           raise "WASMDocumentRoot is supposed to be created before WASMApp!"
         end
 
-        display_app = Scarpe::WASMApp.new(properties)
+        display_app = Scarpe::WASM::App.new(properties)
         display_app.document_root = @doc_root
         @control_interface = display_app.control_interface
         @control_interface.doc_root = @doc_root
@@ -70,7 +70,7 @@ class Scarpe
       end
 
       # Create a corresponding display widget
-      display_class = Scarpe::WASMWidget.display_class_for(widget_class_name)
+      display_class = Scarpe::WASM::Widget.display_class_for(widget_class_name)
       display_widget = display_class.new(properties)
       set_widget_pairing(widget_id, display_widget)
 
@@ -88,7 +88,7 @@ class Scarpe
     # @return [void]
     def destroy
       @app.destroy
-      WASMDisplayService.instance = nil
+      WASM::DisplayService.instance = nil
     end
   end
 end

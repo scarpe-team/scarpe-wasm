@@ -6,17 +6,17 @@ GIT
 
 GIT
   remote: https://github.com/scarpe-team/scarpe.git
-  revision: 296af9b72b21301fe89da6b096d1009966c0baf8
+  revision: c87b7d99629fa362ac7289189bba69d6ae515f09
   glob: lacci/*.gemspec
   specs:
-    lacci (0.2.1)
+    lacci (0.2.2)
 
 GIT
   remote: https://github.com/scarpe-team/scarpe.git
-  revision: 296af9b72b21301fe89da6b096d1009966c0baf8
+  revision: c87b7d99629fa362ac7289189bba69d6ae515f09
   glob: scarpe-components/*.gemspec
   specs:
-    scarpe-components (0.2.1)
+    scarpe-components (0.2.2)
 
 PATH
   remote: .
@@ -48,6 +48,8 @@ GEM
       racc (~> 1.4)
     nokogiri (1.15.4-x86_64-darwin)
       racc (~> 1.4)
+    nokogiri (1.15.4-x86_64-linux)
+      racc (~> 1.4)
     public_suffix (5.0.3)
     racc (1.7.1)
     rack (3.0.8)
@@ -69,6 +71,7 @@ GEM
 PLATFORMS
   wasm32-unknown
   x86_64-darwin-22
+  x86_64-linux
 
 DEPENDENCIES
   capybara

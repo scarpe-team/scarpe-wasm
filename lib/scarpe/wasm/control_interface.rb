@@ -10,7 +10,7 @@
 # And if you depend on this from the framework, I'll add a check-mode that
 # never dispatches any events to any handlers. Do NOT test me on this.
 
-class Scarpe
+module Scarpe::WASM
   class ControlInterface
     include Shoes::Log
 
