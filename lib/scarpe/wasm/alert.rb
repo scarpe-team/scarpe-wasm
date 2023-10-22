@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Scarpe::WASM
-  class Alert < Widget
+  class Alert < Drawable
     # display_properties = :width
 
     def initialize(properties)

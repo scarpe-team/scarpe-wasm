@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-class Scarpe
+module Scarpe::WASM
   # Should inherit from Slot?
-  class WASMShape < Scarpe::WASMWidget
+  class Shape < Drawable
     def initialize(properties)
       super(properties)
     end

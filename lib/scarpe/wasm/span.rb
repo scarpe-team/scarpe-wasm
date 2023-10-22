@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-class Scarpe
-  class WASMSpan < Scarpe::WASMWidget
+module Scarpe::WASM
+  class Span < Drawable
     SIZES = {
       inscription: 10,
       ins: 10,

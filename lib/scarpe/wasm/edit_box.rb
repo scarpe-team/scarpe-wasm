@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-class Scarpe
-  class WASMEditBox < Scarpe::WASMWidget
+module Scarpe::WASM
+  class EditBox < Drawable
     attr_reader :text, :height, :width
 
     def initialize(properties)
@@ -23,20 +23,7 @@ class Scarpe
     end
 
     def element
-      oninput = handler_js_code("change", "this.value")
-
-      HTML.render do |h|
-        h.textarea(id: html_id, oninput: oninput, style: style) { text }
-      end
-    end
-
-    protected
-
-    def style
-      super.merge({
-        height: Dimensions.length(height),
-        width: Dimensions.length(width),
-      }.compact)
+      render("edit_box")
     end
   end
 end

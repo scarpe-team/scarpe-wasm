@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-class Scarpe
-  class WASMPara < WASMWidget
+module Scarpe::WASM
+  class Para < Drawable
     SIZES = {
       inscription: 10,
       ins: 10,
@@ -40,7 +40,7 @@ class Scarpe
         if item.is_a?(String)
           item
         else
-          DisplayService.instance.query_display_widget_for(item)
+          DisplayService.instance.query_display_drawable_for(item)
         end
       end
     end

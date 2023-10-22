@@ -2,7 +2,7 @@
 
 module Scarpe::WASM
   # Scarpe::WASMApp must only be used from the main thread, due to GTK+ limitations.
-  class App < Widget
+  class App < Drawable
     attr_reader :control_interface
 
     attr_writer :shoes_linkable_id
@@ -82,14 +82,14 @@ module Scarpe::WASM
       end
     end
 
-    # All JS callbacks to Scarpe widgets are dispatched
+    # All JS callbacks to Scarpe drawables are dispatched
     # via this handler
     def handle_callback(name, *args)
       @callbacks[name].call(*args)
     end
 
     # Bind a Scarpe callback name; see handle_callback above.
-    # See Scarpe::Widget for how the naming is set up
+    # See Scarpe::Drawable for how the naming is set up
     def bind(name, &block)
       @callbacks[name] = block
     end
