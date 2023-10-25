@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-class Scarpe
-  # Scarpe::WASMApp must only be used from the main thread, due to GTK+ limitations.
-  class WASMApp < WASMWidget
+module Scarpe::Wasm
+  # App must only be used from the main thread, due to GTK+ limitations.
+  class App < Drawable
     attr_reader :control_interface
 
     attr_writer :shoes_linkable_id
@@ -10,22 +10,10 @@ class Scarpe
     def initialize(properties)
       super
 
-      # It's possible to provide a Ruby script by setting
-      # SCARPE_TEST_CONTROL to its file path. This can
-      # allow pre-setting test options or otherwise
-      # performing additional actions not written into
-      # the Shoes app itself.
-      #
-      # The control interface is what lets these files see
-      # events, specify overrides and so on.
       @control_interface = ControlInterface.new
-      if ENV["SCARPE_TEST_CONTROL"]
-        require "scarpe/components/unit_test_helpers"
-        @control_interface.instance_eval File.read(ENV["SCARPE_TEST_CONTROL"])
-      end
 
       # TODO: rename @view
-      @view = Scarpe::WebWrangler.new title: @title,
+      @view = Scarpe::Wasm::WebWrangler.new title: @title,
         width: @width,
         height: @height,
         resizable: @resizable
@@ -62,12 +50,10 @@ class Scarpe
 
     def run
       @control_interface.dispatch_event(:init)
-
       send_shoes_event("return", event_name: "custom_event_loop")
 
-      # This takes control of the main thread and never returns. And it *must* be run from
-      # the main thread. And it stops any Ruby background threads.
-      # That's totally cool and normal, right?
+      @view.empty_page = empty_page_element
+
       @view.run
     end
 
@@ -82,24 +68,28 @@ class Scarpe
       end
     end
 
-    # All JS callbacks to Scarpe widgets are dispatched
+    # All JS callbacks to Scarpe drawables are dispatched
     # via this handler
     def handle_callback(name, *args)
-      @callbacks[name].call(*args)
+      if @callbacks.key?(name)
+        @callbacks[name].call(*args)
+      else
+        raise Scarpe::UnknownEventTypeError, "No such Wasm callback: #{name.inspect}!"
+      end
     end
 
     # Bind a Scarpe callback name; see handle_callback above.
-    # See Scarpe::Widget for how the naming is set up
+    # See {Drawable} for how the naming is set up
     def bind(name, &block)
       @callbacks[name] = block
     end
 
-    # Request a full redraw if WASM is running. Otherwise
+    # Request a full redraw if Wasm is running. Otherwise
     # this is a no-op.
     #
     # @return [void]
     def request_redraw!
-      wrangler = WASMDisplayService.instance.wrangler
+      wrangler = DisplayService.instance.wrangler
       if wrangler.is_running
         wrangler.replace(@document_root.to_html)
       end

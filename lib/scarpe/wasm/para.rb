@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-class Scarpe
-  class WASMPara < WASMWidget
+module Scarpe::Wasm
+  class Para < Drawable
     SIZES = {
       inscription: 10,
       ins: 10,
@@ -13,10 +13,6 @@ class Scarpe
       banner: 48,
     }.freeze
     private_constant :SIZES
-
-    def initialize(properties)
-      super
-    end
 
     def properties_changed(changes)
       items = changes.delete("text_items")
@@ -40,37 +36,19 @@ class Scarpe
         if item.is_a?(String)
           item
         else
-          WASMDisplayService.instance.query_display_widget_for(item)
+          DisplayService.instance.query_display_drawable_for(item)
         end
       end
     end
 
     def element(&block)
-      HTML.render do |h|
-        h.p(**options, &block)
-      end
+      render("para", &block)
     end
 
     def to_html
       @children ||= []
 
       element { child_markup }
-    end
-
-    protected
-
-    def style
-      super.merge({
-        color: rgb_to_hex(@stroke),
-        "font-size": font_size,
-        "font-family": @font,
-      }.compact)
-    end
-
-    def font_size
-      font_size = @size.is_a?(Symbol) ? SIZES[@size] : @size
-
-      Dimensions.length(font_size)
     end
 
     private
@@ -83,10 +61,6 @@ class Scarpe
           child.gsub("\n", "<br>")
         end
       end.join
-    end
-
-    def options
-      @html_attributes.merge(id: html_id, style: style)
     end
   end
 end

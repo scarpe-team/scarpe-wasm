@@ -7,7 +7,7 @@ require "cgi"
 # After creation, it starts in setup mode, and you can
 # use setup-mode callbacks.
 
-class Scarpe
+module Scarpe::Wasm
   class WebWrangler
     include Shoes::Log
 
@@ -16,41 +16,18 @@ class Scarpe
     attr_reader :heartbeat # This is the heartbeat duration in seconds, usually fractional
     attr_reader :control_interface
 
-    # This error indicates a problem when running ConfirmedEval
-    class JSEvalError < Scarpe::Error
-      def initialize(data)
-        @data = data
-        super(data[:msg] || (self.class.name + "!"))
-      end
-    end
-
-    # We got an error running the supplied JS code string in confirmed_eval
-    class JSRuntimeError < JSEvalError
-    end
-
-    # The code timed out for some reason
-    class JSTimeoutError < JSEvalError
-    end
-
-    # We got weird or nonsensical results that seem like an error on WebWrangler's part
-    class InternalError < JSEvalError
-    end
-
     # This is the JS function name for eval results
     EVAL_RESULT = "scarpeAsyncEvalResult"
 
     # Allow a half-second for wasm to finish our JS eval before we decide it's not going to
     EVAL_DEFAULT_TIMEOUT = 0.5
 
-    def initialize(title:, width:, height:, resizable: false, debug: false, heartbeat: 0.1)
-      log_init("WASM::WebWrangler")
+    def initialize(title:, width:, height:, resizable: false, heartbeat: 0.1)
+      log_init("Wasm::WebWrangler")
 
       @log.debug("Creating WebWrangler...")
 
-      # For now, always allow inspect element
-      @wasm = Scarpe::WASMInterops.new
-      #@wasm = Scarpe::LoggedWrapper.new(@wasm, "wasmAPI") if debug
-      @init_refs = {} # Inits don't go away so keep a reference to them to prevent GC
+      @wasm = Scarpe::WasmInterops.new
 
       @title = title
       @width = width
@@ -67,11 +44,7 @@ class Scarpe
       @pending_evals = {}
       @eval_counter = 0
 
-      @dom_wrangler = DOMWrangler.new(self)
-
-      # bind("puts") do |*args|
-      #   puts(*args)
-      # end
+      @dom_wrangler = Scarpe::WebWrangler::DOMWrangler.new(self)
 
       @wasm.bind(EVAL_RESULT) do |*results|
         receive_eval_result(*results)
@@ -80,9 +53,6 @@ class Scarpe
       # Ruby receives scarpeHeartbeat messages via the window library's main loop.
       # So this is a way for Ruby to be notified periodically, in time with that loop.
       @wasm.bind("scarpeHeartbeat") do
-        #  return unless @wasm # I think GTK+ may continue to deliver events after shutdown
-
-        # periodic_js_callback
         @heartbeat_handlers.each(&:call)
         @control_interface.dispatch_event(:heartbeat)
       end
@@ -92,7 +62,7 @@ class Scarpe
 
     # Shorter name for better stack trace messages
     def inspect
-      "Scarpe::WebWrangler:#{object_id}"
+      "Scarpe::WebWasm:#{object_id}"
     end
 
     attr_writer :control_interface
@@ -100,17 +70,16 @@ class Scarpe
     ### Setup-mode Callbacks
 
     def bind(name, &block)
-      raise "App is running, javascript binding no longer works because it uses wasm init!" if @is_running
+      raise Scarpe::JSBindingError, "App is running, javascript binding no longer works because it uses wasm init!" if @is_running
 
       @wasm.bind(name, &block)
     end
 
     def init_code(name, &block)
-      raise "App is running, javascript init no longer works!" if @is_running
+      raise Scarpe::JSInitError, "App is running, javascript init no longer works!" if @is_running
 
       # Save a reference to the init string so that it goesn't get GC'd
       code_str = "#{name}();"
-      @init_refs[name] = code_str
 
       bind(name, &block)
       @wasm.init(code_str)
@@ -128,12 +97,11 @@ class Scarpe
           # new window. But will there ever be a new page/window? Can we just
           # use eval instead of init to set up a periodic handler and call it
           # good?
-          raise "App is running, can't set up new periodic handlers with init!"
+          raise Scarpe::PeriodicHandlerSetupError, "App is running, can't set up new periodic handlers with init!"
         end
 
         js_interval = (interval.to_f * 1_000.0).to_i
         code_str = "setInterval(#{name}, #{js_interval});"
-        @init_refs[name] = code_str
 
         bind(name, &block)
         @wasm.init(code_str)
@@ -151,9 +119,7 @@ class Scarpe
     # This method does *not* return a promise, and there is no way to track
     # its progress or its success or failure.
     def js_eventually(code)
-      raise "WebWrangler isn't running, eval doesn't work!" unless @is_running
-
-      # @log.warn "Deprecated: please do NOT use js_eventually, it's basically never what you want!" unless ENV["CI"]
+      raise Scarpe::WebWranglerNotRunningError, "WebWrangler isn't running, eval doesn't work!" unless @is_running
 
       @wasm.eval(code)
     end
@@ -172,52 +138,7 @@ class Scarpe
     # in a JS function.
     EVAL_OPTS = [:timeout, :wait_for]
     def eval_js_async(code, opts = {})
-      # bad_opts = opts.keys - EVAL_OPTS
-      # raise("Bad options given to eval_with_handler! #{bad_opts.inspect}") unless bad_opts.empty?
-
-      # unless @is_running
-      #   raise "WebWrangler isn't running, so evaluating JS won't work!"
-      # end
-
-      # this_eval_serial = @eval_counter
-      # @eval_counter += 1
-
-      # @pending_evals[this_eval_serial] = {
-      #   id: this_eval_serial,
-      #   code: code,
-      #   start_time: Time.now,
-      #   timeout_if_not_scheduled: Time.now + EVAL_DEFAULT_TIMEOUT,
-      # }
-
-      # # We'll need this inside the promise-scheduling block
-      # pending_evals = @pending_evals
-      # timeout = opts[:timeout] || EVAL_DEFAULT_TIMEOUT
-
-      # promise = Scarpe::Promise.new(parents: (opts[:wait_for] || [])) do
-      #   # Are we mid-shutdown?
-      #   if @wasm
-      #     wrapped_code = WebWrangler.js_wrapped_code(code, this_eval_serial)
-
-      #     # We've been scheduled!
-      #     t_now = Time.now
-      #     # Hard to be sure wasm keeps a proper reference to this, so we will
-      #     pending_evals[this_eval_serial][:wrapped_code] = wrapped_code
-
-      #     pending_evals[this_eval_serial][:scheduled_time] = t_now
-      #     pending_evals[this_eval_serial].delete(:timeout_if_not_scheduled)
-
-      #     pending_evals[this_eval_serial][:timeout_if_not_finished] = t_now + timeout
-      #     @wasm.eval(wrapped_code)
-      #     @log.debug("Scheduled JS: (#{this_eval_serial})\n#{wrapped_code}")
-      #   else
-      #     # We're mid-shutdown. No more scheduling things.
-      #   end
-      # end
-
-      # @pending_evals[this_eval_serial][:promise] = promise
-      # @pending_evals[this_eval_serial][:promise].await
-      # promise
-      js_eventually(code)
+      @wasm.eval(code)
     end
 
     def self.js_wrapped_code(code, eval_id)
@@ -236,72 +157,18 @@ class Scarpe
 
     private
 
-    # def periodic_js_callback
-    #   time_out_eval_results
-    # end
-
     def receive_eval_result(r_type, id, val)
       entry = @pending_evals.delete(id)
       unless entry
-        raise "Received an eval result for a nonexistent ID #{id.inspect}!"
+        raise Scarpe::NonexistentEvalResultError, "Received an eval result for a nonexistent ID #{id.inspect}!"
       end
 
       @log.debug("Got JS value: #{r_type} / #{id} / #{val.inspect}")
-
-      # promise = entry[:promise]
-
-      # case r_type
-      # when "success"
-      #   promise.fulfilled!(val)
-      # when "error"
-      #   promise.rejected! JSRuntimeError.new(
-      #     msg: "JS runtime error: #{val.inspect}!",
-      #     code: entry[:code],
-      #     ret_value: val,
-      #   )
-      # else
-      #   promise.rejected! InternalError.new(
-      #     msg: "JS eval internal error! r_type: #{r_type.inspect}",
-      #     code: entry[:code],
-      #     ret_value: val,
-      #   )
-      # end
     end
 
-    # TODO: would be good to keep 'tombstone' results for awhile after timeout, maybe up to around a minute,
-    # so we can detect if we're timing things out and then having them return successfully after a delay.
-    # Then we could adjust the timeouts. We could also check if later serial numbers have returned, and time
-    # out earlier serial numbers... *if* we're sure wasm will always execute JS evals in order.
-    # This all adds complexity, though. For now, do timeouts on a simple max duration.
-    # def time_out_eval_results
-    #   t_now = Time.now
-    #   timed_out_from_scheduling = @pending_evals.keys.select do |id|
-    #     t = @pending_evals[id][:timeout_if_not_scheduled]
-    #     t && t_now >= t
-    #   end
-    #   timed_out_from_finish = @pending_evals.keys.select do |id|
-    #     t = @pending_evals[id][:timeout_if_not_finished]
-    #     t && t_now >= t
-    #   end
-    #   timed_out_from_scheduling.each do |id|
-    #     @log.debug("JS timed out because it was never scheduled: (#{id}) #{@pending_evals[id][:code].inspect}")
-    #   end
-    #   timed_out_from_finish.each do |id|
-    #     @log.debug("JS timed out because it never finished: (#{id}) #{@pending_evals[id][:code].inspect}")
-    #   end
-
-    #   # A plus *should* be fine since nothing should ever be on both lists. But let's be safe.
-    #   timed_out_ids = timed_out_from_scheduling | timed_out_from_finish
-
-    #   timed_out_ids.each do |id|
-    #     @log.error "Timing out JS eval! #{@pending_evals[id][:code]}"
-    #     entry = @pending_evals.delete(id)
-    #     err = JSTimeoutError.new(msg: "JS timeout error!", code: entry[:code], ret_value: nil)
-    #     entry[:promise].rejected!(err)
-    #   end
-    # end
-
     public
+
+    attr_writer :empty_page
 
     # After setup, we call run to go to "running" mode.
     # No more setup callbacks, only running callbacks.
@@ -309,18 +176,15 @@ class Scarpe
     def run
       @log.debug("Run...")
 
-      # From wasm:
       # 0 - Width and height are default size
-      # 1 - Width and height are minimum bonds
-      # 2 - Width and height are maximum bonds
+      # 1 - Width and height are minimum bounds
+      # 2 - Width and height are maximum bounds
       # 3 - Window size can not be changed by a user
       hint = @resizable ? 0 : 3
 
       @wasm.set_title(@title)
       @wasm.set_size(@width, @height, hint)
       @wasm.navigate("data:text/html, #{empty}")
-
-      # monkey_patch_console(@wasm)
 
       @is_running = true
       @wasm.run
@@ -339,49 +203,8 @@ class Scarpe
 
     private
 
-    # TODO: can this be an init()?
-    def monkey_patch_console(window)
-      # this forwards all console.log/info/error/warn calls also
-      # to the terminal that is running the scarpe app
-      # window.eval("
-      #   function patchConsole(fn) {
-      #     const original = console[fn];
-      #     console[fn] = function(...args) {
-      #       original(...args);
-      #       puts(...args);
-      #     }
-      #   };
-      #   patchConsole('log');
-      #   patchConsole('info');
-      #   patchConsole('error');
-      #   patchConsole('warn');
-      # ")
-    end
-
     def empty
-      html = <<~HTML
-        <html>
-          <head id='head-wvroot'>
-            <style id='style-wvroot'>
-              /** Style resets **/
-              body {
-                font-family: arial, Helvetica, sans-serif;
-                margin: 0;
-                height: 100%;
-                overflow: hidden;
-              }
-              p {
-                margin: 0;
-              }
-            </style>
-          </head>
-          <body id='body-wvroot'>
-            <div id='wrapper-wvroot'></div>
-          </body>
-        </html>
-      HTML
-
-      CGI.escape(html)
+      Scarpe::Components::Calzini.empty_page_element
     end
 
     public
@@ -401,12 +224,6 @@ class Scarpe
     def dom_change(js)
       @dom_wrangler.request_change(js)
     end
-
-    # Return whether the DOM is, right this moment, confirmed to be fully
-    # up to date or not.
-    # def dom_fully_updated?
-    #   @dom_wrangler.fully_updated?
-    # end
 
     # Return a promise that will be fulfilled when all current DOM changes
     # have committed (but not necessarily any future DOM changes.)
@@ -439,26 +256,19 @@ end
 # changes waiting to catch the next bus. But we don't want more than one in flight,
 # since it seems like having too many pending RPC requests can crash wasm. So:
 # one redraw scheduled and one redraw promise waiting around, at maximum.
-class Scarpe
+module Scarpe
   class WebWrangler
     class DOMWrangler
       include Shoes::Log
 
       attr_reader :waiting_changes
 
-      # attr_reader :pending_redraw_promise
-      # attr_reader :waiting_redraw_promise
-
       def initialize(web_wrangler, debug: false)
-        log_init("WASM::WebWrangler::DOMWrangler")
+        log_init("Wasm::WebWrangler::DOMWrangler")
 
         @wrangler = web_wrangler
 
         @waiting_changes = []
-        # @pending_redraw_promise = nil
-        # @waiting_redraw_promise = nil
-
-        # @fully_up_to_date_promise = nil
 
         # Initially we're waiting for a full replacement to happen.
         # It's possible to request updates/changes before we have
@@ -467,19 +277,6 @@ class Scarpe
         @first_draw_requested = false
 
         @redraw_handlers = []
-
-        # The "fully up to date" logic is complicated and not
-        # as well tested as I'd like. This makes it far less
-        # likely that the event simply won't fire.
-        # With more comprehensive testing, this should be
-        # removable.
-        # web_wrangler.periodic_code("scarpeDOMWranglerHeartbeat") do
-        #   if @fully_up_to_date_promise && fully_updated?
-        #     @log.info("Fulfilling up-to-date promise on heartbeat")
-        #     @fully_up_to_date_promise.fulfilled!
-        #     @fully_up_to_date_promise = nil
-        #   end
-        # end
       end
 
       def request_change(js_code)
@@ -510,123 +307,12 @@ class Scarpe
         @redraw_handlers << block
       end
 
-      # What are the states of redraw?
-      # "empty" - no waiting promise, no pending-redraw promise, no pending changes
-      # "pending only" - no waiting promise, but we have a pending redraw with some changes; it hasn't committed yet
-      # "pending and waiting" - we have a waiting promise for our unscheduled changes; we can add more unscheduled
-      #     changes since we haven't scheduled them yet.
-      #
-      # This is often called after adding a new waiting change or replacing them, so the state may have just changed.
-      # It can also be called when no changes have been made and no updates need to happen.
       def redraw
-        # if fully_updated?
-        #   # No changes to make, nothing in-process or waiting, so just return a pre-fulfilled promise
-        #   @log.debug("Requesting redraw but there are no pending changes or promises, return pre-fulfilled")
-        #   return Promise.fulfilled
-        # end
-
-        # Already have a redraw requested *and* one on deck? Then all current changes will have committed
-        # when we (eventually) fulfill the waiting_redraw_promise.
-        # if @waiting_redraw_promise
-        #   @log.debug("Promising eventual redraw of #{@waiting_changes.size} waiting unscheduled changes.")
-        #   return @waiting_redraw_promise
-        # end
-
-        # if @waiting_changes.empty?
-        #   # There's no waiting_redraw_promise. There are no waiting changes. But we're not fully updated.
-        #   # So there must be a redraw in flight, and we don't need to schedule a new waiting_redraw_promise.
-        #   @log.debug("Returning in-flight redraw promise")
-        #   return @pending_redraw_promise
-        # end
-
-        # @log.debug("Requesting redraw with #{@waiting_changes.size} waiting changes - need to schedule something!")
-
-        # We have at least one waiting change, possibly newly-added. We have no waiting_redraw_promise.
-        # Do we already have a redraw in-flight?
-        # if @pending_redraw_promise
-        #   # Yes we do. Schedule a new waiting promise. When it turns into the pending_redraw_promise it will
-        #   # grab all waiting changes. In the mean time, it sits here and waits.
-        #   #
-        #   # We *could* do a fancy promise thing and have it update @waiting_changes for itself, etc, when it
-        #   # schedules itself. But we should always be calling promise_redraw or having a redraw fulfilled (see below)
-        #   # when these things change. I'd rather keep the logic in this method. It's easier to reason through
-        #   # all the cases.
-        #   @waiting_redraw_promise = Promise.new
-
-        #   @log.debug("Creating a new waiting promise since a pending promise is already in place")
-        #   return @waiting_redraw_promise
-        # end
-
-        # We have no redraw in-flight and no pre-existing waiting line. The new change(s) are presumably right
-        # after things were fully up-to-date. We can schedule them for immediate redraw.
-
         @log.debug("Requesting redraw with #{@waiting_changes.size} waiting changes - scheduling a new redraw for them!")
-        # promise = schedule_waiting_changes # This clears the waiting changes
         schedule_waiting_changes
-        # @pending_redraw_promise = promise
 
         @redraw_handlers.each(&:call)
-        # @pending_redraw_promise = nil
-
-        # if @waiting_redraw_promise
-        #   # While this redraw was in flight, more waiting changes got added and we made a promise
-        #   # about when they'd complete. Now they get scheduled, and we'll fulfill the waiting
-        #   # promise when that redraw finishes. Clear the old waiting promise. We'll add a new one
-        #   # when/if more changes are scheduled during this redraw.
-        #   old_waiting_promise = @waiting_redraw_promise
-        #   @waiting_redraw_promise = nil
-
-        #   @log.debug "Fulfilled redraw with #{@waiting_changes.size} waiting changes - scheduling a new redraw for them!"
-
-        #   new_promise = promise_redraw
-        #   new_promise.on_fulfilled { old_waiting_promise.fulfilled! }
-        # else
-        # The in-flight redraw completed, and there's still no waiting promise. Good! That means
-        # we should be fully up-to-date.
-        #     @log.debug "Fulfilled redraw with no waiting changes - marking us as up to date!"
-        #     if @waiting_changes.empty?
-        #       # We're fully up to date! Fulfill the promise. Now we don't need it again until somebody asks
-        #       # us for another.
-        #       if @fully_up_to_date_promise
-        #         @fully_up_to_date_promise.fulfilled!
-        #         @fully_up_to_date_promise = nil
-        #       end
-        #     else
-        #       @log.error "WHOAH, WHAT? My logic must be wrong, because there's " +
-        #         "no waiting promise, but waiting changes!"
-        #     end
-        #   end
-
-        #   @log.debug("Redraw is now fully up-to-date") if fully_updated?
-        # end.on_rejected do
-        #   @log.error "Could not complete JS redraw! #{promise.reason.full_message}"
-        #   @log.debug("REDRAW FULLY UP TO DATE BUT JS FAILED") if fully_updated?
-
-        #   raise "JS Redraw failed! Bailing!"
-
-        #   # Later we should figure out how to handle this. Clear the promises and queues and request another redraw?
-        # end
       end
-
-      # def fully_updated?
-      #   @pending_redraw_promise.nil? && @waiting_redraw_promise.nil? && @waiting_changes.empty?
-      # end
-
-      # Return a promise which will be fulfilled when the DOM is fully up-to-date
-      # def promise_fully_updated
-      #   if fully_updated?
-      #     # No changes to make, nothing in-process or waiting, so just return a pre-fulfilled promise
-      #     return Promise.fulfilled
-      #   end
-
-      #   # Do we already have a promise for this? Return it. Everybody can share one.
-      #   if @fully_up_to_date_promise
-      #     return @fully_up_to_date_promise
-      #   end
-
-      #   # We're not fully updated, so we need a promise. Create it, return it.
-      #   @fully_up_to_date_promise = Promise.new
-      # end
 
       private
 
@@ -645,13 +331,13 @@ end
 
 # For now we don't need one of these to add DOM elements, just to manipulate them
 # after initial render.
-class Scarpe
+module Scarpe
   class WebWrangler
     class ElementWrangler
       attr_reader :html_id
 
       def initialize(html_id)
-        @webwrangler = WASMDisplayService.instance.wrangler
+        @webwrangler = Scarpe::Wasm::DisplayService.instance.wrangler
         @html_id = html_id
       end
 
@@ -697,7 +383,6 @@ class Scarpe
         checked_value = mark ? "true" : "false"
         @webwrangler.dom_change("document.getElementById('#{html_id}').checked = #{checked_value};")
       end
-
     end
   end
 end

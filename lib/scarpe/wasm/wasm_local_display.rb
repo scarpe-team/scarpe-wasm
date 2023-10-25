@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-class Scarpe
-  # This is the simplest type of WASM DisplayService. It creates WASM widgets
-  # corresponding to Shoes widgets, manages the WASM and its DOM tree, and
+module Scarpe::Wasm
+  # This is the simplest type of WASM DisplayService. It creates WASM drawables
+  # corresponding to Shoes drawables, manages the WASM and its DOM tree, and
   # generally keeps the Shoes/WASM connection working.
   #
   # This is an in-process WASM-based display service, with all the limitations that
@@ -10,77 +10,91 @@ class Scarpe
   # process, too many or too large evals can crash the process, etc.
   # Frequently it's better to use a RelayDisplayService to a second
   # process containing one of these.
-  class WASMDisplayService < Shoes::DisplayService
+  class DisplayService < Shoes::DisplayService
     include Shoes::Log
 
     class << self
       attr_accessor :instance
     end
 
-    # The ControlInterface is used to handle internal events in WASM Scarpe
+    # The ControlInterface is used to handle internal events in Wasm Scarpe
     attr_reader :control_interface
 
-    # The DocumentRoot is the top widget of the WASM-side widget tree
+    # The DocumentRoot is the top drawable of the Wasm-side drawable tree
     attr_reader :doc_root
 
-    # app is the Scarpe::WASMApp
+    # app is the Scarpe::Wasm::App
     attr_reader :app
 
     # wrangler is the Scarpe::WebWrangler
     attr_reader :wrangler
 
-    # This is called before any of the various WASMWidgets are created, to be
+    # This is called before any of the various Drawables are created, to be
     # able to create them and look them up.
     def initialize
-      if WASMDisplayService.instance
+      if DisplayService.instance
         raise "ERROR! This is meant to be a singleton!"
       end
 
-      WASMDisplayService.instance = self
+      DisplayService.instance = self
 
       super()
-      log_init("WASM::WASMDisplayService")
+      log_init("Wasm::DisplayService")
 
-      @display_widget_for = {}
+      @display_drawable_for = {}
     end
 
-    # Create a WASM display widget for a specific Shoes widget, and pair it with
-    # the linkable ID for this Shoes widget.
+    # Create a Wasm display drawable for a specific Shoes drawable, and pair it with
+    # the linkable ID for this Shoes drawable.
     #
-    # @param widget_class_name [String] The class name of the Shoes widget, e.g. Shoes::Button
-    # @param widget_id [String] the linkable ID for widget events
-    # @param properties [Hash] a JSON-serialisable Hash with the widget's display properties
-    # @return [WASMWidget] the newly-created WASM widget
-    def create_display_widget_for(widget_class_name, widget_id, properties)
-      if widget_class_name == "App"
+    # @param drawable_class_name [String] The class name of the Shoes drawable, e.g. Shoes::Button
+    # @param drawable_id [String] the linkable ID for drawable events
+    # @param properties [Hash] a JSON-serialisable Hash with the drawable's display properties
+    # @param is_widget [Boolean] whether the class is a user-defined Shoes::Widget subclass
+    # @return [Wasm::Drawable] the newly-created Wasm drawable
+    def create_display_drawable_for(drawable_class_name, drawable_id, properties, is_widget:)
+      existing = query_display_drawable_for(drawable_id, nil_ok: true)
+      if existing
+        @log.warn("There is already a display drawable for #{drawable_id.inspect}! Returning #{existing.class.name}.")
+        return existing
+      end
+
+      if drawable_class_name == "App"
         unless @doc_root
-          raise "WASMDocumentRoot is supposed to be created before WASMApp!"
+          raise Scarpe::MissingDocRootError, "DocumentRoot is supposed to be created before App!"
         end
 
-        display_app = Scarpe::WASMApp.new(properties)
+        display_app = Scarpe::Wasm::App.new(properties)
         display_app.document_root = @doc_root
         @control_interface = display_app.control_interface
         @control_interface.doc_root = @doc_root
         @app = @control_interface.app
         @wrangler = @control_interface.wrangler
 
-        set_widget_pairing(widget_id, display_app)
+        set_drawable_pairing(drawable_id, display_app)
 
         return display_app
       end
 
-      # Create a corresponding display widget
-      display_class = Scarpe::WASMWidget.display_class_for(widget_class_name)
-      display_widget = display_class.new(properties)
-      set_widget_pairing(widget_id, display_widget)
+      # Create a corresponding display drawable
+      if is_widget
+        display_class = Scarpe::Wasm::Flow
+      else
+        display_class = Scarpe::Wasm::Drawable.display_class_for(drawable_class_name)
+        unless display_class < Scarpe::Wasm::Drawable
+          raise Scarpe::BadDisplayClassType, "Wrong display class type #{display_class.inspect} for class name #{drawable_class_name.inspect}!"
+        end
+      end
+      display_drawable = display_class.new(properties)
+      set_drawable_pairing(drawable_id, display_drawable)
 
-      if widget_class_name == "DocumentRoot"
-        # WASMDocumentRoot is created before WASMApp. Mostly doc_root is just like any other widget,
-        # but we'll want a reference to it when we create WASMApp.
-        @doc_root = display_widget
+      if drawable_class_name == "DocumentRoot"
+        # DocumentRoot is created before App. Mostly doc_root is just like any other drawable,
+        # but we'll want a reference to it when we create App.
+        @doc_root = display_drawable
       end
 
-      display_widget
+      display_drawable
     end
 
     # Destroy the display service and the app. Quit the process (eventually.)
@@ -88,7 +102,7 @@ class Scarpe
     # @return [void]
     def destroy
       @app.destroy
-      WASMDisplayService.instance = nil
+      DisplayService.instance = nil
     end
   end
 end

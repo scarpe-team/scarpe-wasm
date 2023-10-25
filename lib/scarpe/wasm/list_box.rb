@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-class Scarpe
-  class WASMListBox < Scarpe::WASMWidget
-    attr_reader :selected_item, :items, :height, :width
+module Scarpe::Wasm
+  class ListBox < Drawable
+    attr_reader :selected_item, :items, :height, :width, :choose
 
     def initialize(properties)
-      super(properties)
+      super
 
-      # The JS handler sends a "change" event, which we forward to the Shoes widget tree
+      # The JS handler sends a "change" event, which we forward to the Shoes drawable tree
       bind("change") do |new_item|
         send_self_event(new_item, event_name: "change")
       end

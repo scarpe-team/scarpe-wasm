@@ -1,12 +1,7 @@
 # frozen_string_literal: true
 
-class Scarpe
-  # Should inherit from Slot?
-  class WASMShape < Scarpe::WASMWidget
-    def initialize(properties)
-      super(properties)
-    end
-
+module Scarpe::Wasm
+  class Shape < Drawable
     def to_html
       @children ||= []
       child_markup = @children.map(&:to_html).join
@@ -51,7 +46,7 @@ class Scarpe
           x, y = *args
           current_path += "L #{x} #{y} "
         else
-          raise "Unknown shape command! #{cmd.inspect}"
+          raise Scarpe::UnknownShapeCommandError, "Unknown shape command! #{cmd.inspect}"
         end
       end
 

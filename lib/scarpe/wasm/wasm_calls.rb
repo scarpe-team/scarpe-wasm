@@ -2,12 +2,12 @@
 
 require "js"
 
-class Scarpe
-  class WASMInterops
+module Scarpe
+  class WasmInterops
     include Shoes::Log
 
     def initialize
-      log_init("WASM")
+      log_init("Wasm")
     end
 
     def js_integer?(num)

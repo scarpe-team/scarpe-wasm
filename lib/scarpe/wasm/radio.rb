@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-class Scarpe
-  class WASMRadio < Scarpe::WASMWidget
+module Scarpe::Wasm
+  class Radio < Drawable
     attr_reader :text
 
     def initialize(properties)
       super
 
       bind("click") do
-        send_self_event(event_name: "click", target: shoes_linkable_id)
+        send_self_event(event_name: "click")
       end
     end
 
@@ -20,15 +20,13 @@ class Scarpe
     end
 
     def element
-      HTML.render do |h|
-        h.input(type: :radio, id: html_id, onclick: handler_js_code("click"), name: group_name, value: "hmm #{text}", checked: @checked, style: style)
+      props = shoes_styles
+
+      # If a group isn't set, default to the linkable ID of the parent slot
+      unless @group
+        props["group"] = @parent ? @parent.shoes_linkable_id : "no_group"
       end
-    end
-
-    private
-
-    def group_name
-      @group || @parent
+      render("radio", props)
     end
   end
 end

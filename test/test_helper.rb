@@ -52,13 +52,14 @@ class WasmPackageTestCase < CapybaraTestCase
   def build_test_wasm_package
     return if TEST_DATA[:wasm_built]
 
-    Dir.chdir TEST_CACHE_DIR
+    Dir.chdir TEST_CACHE_DIR # This needs to be true during the test, but is there a better place for it?
     FileUtils.touch "src/APP_NAME.rb" # Use this to have a boilerplate name to search/replace
 
     # Need to use the TEST_CACHE_DIR Bundler env, *not* the one for the test harness.
     Bundler.with_unbundled_env do
       system("bundle exec wasify src/APP_NAME.rb") || raise("Couldn't wasify-build!")
     end
+    raise "Wasify didn't create packed_ruby.wasm!" unless File.exist?("packed_ruby.wasm")
 
     TEST_DATA[:wasm_built] = true
   end
