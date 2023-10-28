@@ -1,66 +1,70 @@
 # frozen_string_literal: true
 
-class Scarpe
-  # The WASMWidget parent class helps connect a WASM widget with
-  # its Shoes equivalent, render itself to the WASM DOM, handle
-  # Javascript events and generally keep things working in WASM.
-  class WASMWidget < Shoes::Linkable
+module Scarpe::Wasm
+  # The Drawable parent class helps connect a Wasm drawable with
+  # its Shoes equivalent, render itself to the Wasm DOM, handle
+  # Javascript events and generally keep things working in Wasm.
+  class Drawable < Shoes::Linkable
     include Shoes::Log
 
     class << self
-      # Return the corresponding WASM class for a particular Shoes class name
+      # Return the corresponding Wasm class for a particular Shoes class name
       def display_class_for(scarpe_class_name)
         scarpe_class = Shoes.const_get(scarpe_class_name)
         unless scarpe_class.ancestors.include?(Shoes::Linkable)
-          raise "Scarpe WASM can only get display classes for Shoes " +
-            "linkable widgets, not #{scarpe_class_name.inspect}!"
+          raise Scarpe::InvalidClassError, "Scarpe Wasm can only get display classes for Shoes " +
+            "linkable drawables, not #{scarpe_class_name.inspect}!"
         end
 
-        klass = Scarpe.const_get("WASM" + scarpe_class_name.split("::")[-1])
+        klass = Scarpe::Wasm.const_get(scarpe_class_name.split("::")[-1])
         if klass.nil?
-          raise "Couldn't find corresponding Scarpe WASM class for #{scarpe_class_name.inspect}!"
+          raise Scarpe::MissingClassError, "Couldn't find corresponding Scarpe Wasm class for #{scarpe_class_name.inspect}!"
         end
 
         klass
       end
     end
 
-    # The Shoes ID corresponding to the Shoes widget for this WASM widget
+    # The Shoes ID corresponding to the Shoes drawable for this Wasm drawable
     attr_reader :shoes_linkable_id
 
-    # The WASMWidget parent of this widget
+    # The Drawable parent of this drawable
     attr_reader :parent
 
-    # An array of WASMWidget children (possibly empty) of this widget
+    # An array of Drawable children (possibly empty) of this drawable
     attr_reader :children
 
-    # Set instance variables for the display properties of this widget. Bind Shoes
-    # events for changes of parent widget and changes of property values.
+    # Set instance variables for the Shoes styles of this drawable. Bind Shoes
+    # events for changes of parent drawable and changes of property values.
     def initialize(properties)
-      log_init("WASM::Widget")
+      log_init("Wasm::Drawable")
+
+      @shoes_style_names = properties.keys.map(&:to_s) - ["shoes_linkable_id"]
 
       # Call method, which looks up the parent
       @shoes_linkable_id = properties["shoes_linkable_id"] || properties[:shoes_linkable_id]
       unless @shoes_linkable_id
-        raise "Could not find property shoes_linkable_id in #{properties.inspect}!"
+        raise Scarpe::MissingAttributeError, "Could not find property shoes_linkable_id in #{properties.inspect}!"
       end
 
-      # Set the display properties
+      # Set the Shoes styles as instance variables
       properties.each do |k, v|
         next if k == "shoes_linkable_id"
 
         instance_variable_set("@" + k.to_s, v)
       end
 
-      # The parent field is *almost* simple enough that a typed display property would handle it.
+      # Must call this before bind
+      super(linkable_id: @shoes_linkable_id)
+
       bind_shoes_event(event_name: "parent", target: shoes_linkable_id) do |new_parent_id|
-        display_parent = WASMDisplayService.instance.query_display_widget_for(new_parent_id)
+        display_parent = DisplayService.instance.query_display_drawable_for(new_parent_id)
         if @parent != display_parent
           set_parent(display_parent)
         end
       end
 
-      # When Shoes widgets change properties, we get a change notification here
+      # When Shoes drawables change properties, we get a change notification here
       bind_shoes_event(event_name: "prop_change", target: shoes_linkable_id) do |prop_changes|
         prop_changes.each do |k, v|
           instance_variable_set("@" + k, v)
@@ -71,19 +75,25 @@ class Scarpe
       bind_shoes_event(event_name: "destroy", target: shoes_linkable_id) do
         destroy_self
       end
+    end
 
-      super(linkable_id: @shoes_linkable_id)
+    def shoes_styles
+      p = {}
+      @shoes_style_names.each do |prop_name|
+        p[prop_name] = instance_variable_get("@#{prop_name}")
+      end
+      p
     end
 
     # Properties_changed will be called automatically when properties change.
-    # The widget should delete any changes from the Hash that it knows how
+    # The drawable should delete any changes from the Hash that it knows how
     # to incrementally handle, and pass the rest to super. If any changes
     # go entirely un-handled, a full redraw will be scheduled.
     # This exists to be overridden by children watching for changes.
     #
     # @param changes [Hash] a Hash of new values for properties that have changed
     def properties_changed(changes)
-      # If a widget does something really nonstandard with its html_id or element, it will
+      # If a drawable does something really nonstandard with its html_id or element, it will
       # need to override to prevent this from happening. That's easy enough, though.
       if changes.key?("hidden")
         hidden = changes.delete("hidden")
@@ -99,7 +109,7 @@ class Scarpe
       needs_update! unless changes.empty?
     end
 
-    # Give this widget a new parent, including managing the appropriate child lists for parent widgets.
+    # Give this drawable a new parent, including managing the appropriate child lists for parent drawables.
     def set_parent(new_parent)
       @parent&.remove_child(self)
       new_parent&.add_child(self)
@@ -108,7 +118,7 @@ class Scarpe
 
     # A shorter inspect text for prettier irb output
     def inspect
-      "#<#{self.class}:#{self.object_id} @shoes_linkable_id=#{@shoes_linkable_id} @parent=#{@parent.inspect} @children=#{@children.inspect}>"
+      "#<#{self.class}:#{self.object_id} @shoes_linkable_id=#{@shoes_linkable_id} @children=#{@children.inspect}>"
     end
 
     protected
@@ -169,8 +179,8 @@ class Scarpe
 
     public
 
-    # This gets a mini-WASM for just this element and its children, if any.
-    # It is normally called by the widget itself to do its DOM management.
+    # This gets an updater for just this element and its children, if any.
+    # It is normally called by the drawable itself to do its DOM management.
     #
     # @return [Scarpe::WebWrangler::ElementWrangler] a DOM object manager
     def html_element
@@ -192,7 +202,7 @@ class Scarpe
     end
 
     # to_html is intended to get the HTML DOM rendering of this object and its children.
-    # Calling it should be side-effect-free and NOT update the WASM.
+    # Calling it should be side-effect-free and NOT update the DOM.
     #
     # @return [String] the rendered HTML
     def to_html
@@ -207,24 +217,26 @@ class Scarpe
 
     # This binds a Scarpe JS callback, handled via a single dispatch point in the app
     #
-    # @param event [String] the Scarpe widget event name
+    # @param event [String] the Scarpe drawable event name
     # @yield the block to call when the event occurs
     def bind(event, &block)
-      raise("Widget has no linkable_id! #{inspect}") unless linkable_id
+      raise(Scarpe::MissingAttributeError, "Drawable has no linkable_id! #{inspect}") unless linkable_id
 
-      WASMDisplayService.instance.app.bind("#{linkable_id}-#{event}", &block)
+      DisplayService.instance.app.bind("#{linkable_id}-#{event}", &block)
     end
 
-    # Removes the element from both the Ruby Widget tree and the HTML DOM.
+    # Removes the element from both the Ruby Drawable tree and the HTML DOM.
+    # Unsubscribe from all Shoes events.
     # Return a promise for when that HTML change will be visible.
     #
     # @return [Scarpe::Promise] a promise that is fulfilled when the HTML change is complete
     def destroy_self
       @parent&.remove_child(self)
+      unsub_all_shoes_events
       html_element.remove
     end
 
-    # Request a full redraw of all widgets.
+    # Request a full redraw of all drawables.
     #
     # It's really hard to do dirty-tracking here because the redraws are fully asynchronous.
     # And so we can't easily cancel one "in flight," and we can't easily pick up the latest
@@ -232,16 +244,16 @@ class Scarpe
     #
     # @return [void]
     def needs_update!
-      WASMDisplayService.instance.app.request_redraw!
+      DisplayService.instance.app.request_redraw!
     end
 
-    # Generate JS code to trigger a specific event name on this widget with the supplies arguments.
+    # Generate JS code to trigger a specific event name on this drawable with the supplies arguments.
     #
     # @param handler_function_name [String] the event name - @see #bind
     # @param args [Array] additional arguments that will be passed to the event in the generated JS
     # @return [String] the generated JS code
     def handler_js_code(handler_function_name, *args)
-      raise("Widget has no linkable_id! #{inspect}") unless linkable_id
+      raise(Scarpe::MissingAttributeError, "Drawable has no linkable_id! #{inspect}") unless linkable_id
 
       js_args = ["'#{linkable_id}-#{handler_function_name}'", *args].join(", ")
       "scarpeHandler(#{js_args})"

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-class Scarpe
-  class WASMCheck < Scarpe::WASMWidget
+module Scarpe::Wasm
+  class Check < Drawable
     attr_reader :text
 
     def initialize(properties)
@@ -21,9 +21,7 @@ class Scarpe
     end
 
     def element
-      HTML.render do |h|
-        h.input(type: :checkbox, id: html_id, onclick: handler_js_code("click"), value: "hmm #{text}", checked: @checked, style:)
-      end
+      render("check")
     end
   end
 end

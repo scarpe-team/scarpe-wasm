@@ -2,40 +2,20 @@
 
 require "scarpe/components/base64"
 
-class Scarpe
-  class WASMImage < WASMWidget
-    include Components::Base64
+module Scarpe::Wasm
+  class Image < Drawable
+    include Scarpe::Components::Base64
+
     def initialize(properties)
       super
 
-      @url = valid_url?(@url) ? @url : "data:image/png;base64,#{encode_file_to_base64(@url)}"
-    end
-
-    def element
-      if @click
-        HTML.render do |h|
-          h.a(id: html_id, href: @click) { h.img(id: html_id, src: @url, style:) }
-        end
-      else
-        HTML.render do |h|
-          h.img(id: html_id, src: @url, style:)
-        end
+      unless valid_url?(@url)
+        @url = "data:image/png;base64,#{encode_file_to_base64(@url)}"
       end
     end
 
-    protected
-
-    def style
-      styles = super
-
-      styles[:width] = Dimensions.length(@width) if @width
-      styles[:height] = Dimensions.length(@height) if @height
-
-      styles[:top] = Dimensions.length(@top) if @top
-      styles[:left] = Dimensions.length(@left) if @left
-      styles[:position] = "absolute" if @top || @left
-
-      styles
+    def element
+      render("image")
     end
   end
 end

@@ -40,7 +40,7 @@ Install the gem and add to the application's Gemfile by executing:
 
     $ bundle add scarpe-wasm
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+If bundler is not being used to manage dependencies (NOT RECOMMENDED), install the gem by executing:
 
     $ gem install scarpe-wasm
 

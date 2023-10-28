@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-class Scarpe
-  class WASMSpan < Scarpe::WASMWidget
+module Scarpe::Wasm
+  class Span < Drawable
     SIZES = {
       inscription: 10,
       ins: 10,
@@ -34,35 +34,11 @@ class Scarpe
     end
 
     def element(&block)
-      HTML.render do |h|
-        h.span(**options, &block)
-      end
+      render("span", &block)
     end
 
     def to_html
       element { @text }
-    end
-
-    protected
-
-    def style
-      {
-        color: @stroke,
-        "font-size": font_size,
-        "font-family": @font,
-      }.compact
-    end
-
-    private
-
-    def options
-      @html_attributes.merge(id: html_id, style: style)
-    end
-
-    def font_size
-      font_size = @size.is_a?(Symbol) ? SIZES[@size] : @size
-
-      Dimensions.length(font_size)
     end
   end
 end

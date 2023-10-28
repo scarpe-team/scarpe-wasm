@@ -1,22 +1,6 @@
 # frozen_string_literal: true
 
-class Scarpe
-  class WASMFlow < Scarpe::WASMSlot
-    def initialize(properties)
-      super
-    end
-
-    protected
-
-    def style
-      {
-        display: "flex",
-        "flex-direction": "row",
-        "flex-wrap": "wrap",
-        "align-content": "flex-start",
-        "justify-content": "flex-start",
-        "align-items": "flex-start",
-      }.merge(super)
-    end
+module Scarpe::Wasm
+  class Flow < Slot
   end
 end

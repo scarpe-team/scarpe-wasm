@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-class Scarpe
-  class WASMEditBox < Scarpe::WASMWidget
+module Scarpe::Wasm
+  class EditBox < Drawable
     attr_reader :text, :height, :width
 
     def initialize(properties)
       super
 
-      # The JS handler sends a "change" event, which we forward to the Shoes widget tree
+      # The JS handler sends a "change" event, which we forward to the Shoes drawable tree
       bind("change") do |new_text|
         send_self_event(new_text, event_name: "change")
       end
@@ -23,20 +23,7 @@ class Scarpe
     end
 
     def element
-      oninput = handler_js_code("change", "this.value")
-
-      HTML.render do |h|
-        h.textarea(id: html_id, oninput: oninput, style: style) { text }
-      end
-    end
-
-    protected
-
-    def style
-      super.merge({
-        height: Dimensions.length(height),
-        width: Dimensions.length(width),
-      }.compact)
+      render("edit_box")
     end
   end
 end
