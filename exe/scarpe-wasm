@@ -82,11 +82,12 @@ when "src-package"
   end
   verb = ARGV[0]
   verb_target = ARGV[1]
-when "run"
+when "run", "app-index"
   if ARGV.length != 2
     print_usage
     exit -1
   end
+  verb = ARGV[0]
   verb_target = ARGV[1]
 else
   # Default to run
@@ -106,6 +107,13 @@ when "src-package"
   p = Scarpe::Wasm::Packaging::Package.new app_dir: verb_target, prepack: use_prepack
   p.build
   puts "Built Wasm package, installed to #{p.install_dir}."
+when "app-index"
+  rb_file = verb_target
+  index_file = "index-" + File.basename(rb_file, ".rb") + ".html"
+  pkg = Scarpe::Wasm::Packaging.default_package(prepack: false)
+  index_contents = pkg.app_index_text("http://localhost:8080/#{rb_file}")
+  File.write(index_file, index_contents)
+  puts "Created app-index file as #{index_file.inspect}"
 when "run"
   raise "Can't find file: #{verb_target.inspect}!" unless File.exist?(verb_target)
 
