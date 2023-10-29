@@ -41,6 +41,7 @@ def print_usage
     Usage: scarpe-wasm [OPTIONS] <scarpe app file>            # Same as "scarpe run"
            scarpe-wasm [OPTIONS] run <scarpe app file>
            scarpe-wasm [OPTIONS] src-package <scarpe app dir> # package a dir with src and Gemfile inside
+           scarpe-wasm [OPTIONS] app-index <ruby path>        # write only an index.html file for the given Ruby path
            scarpe-wasm [OPTIONS] env                          # print Scarpe environment settings
            scarpe-wasm -v                                     # print the Scarpe gem version and exit
       Options:
