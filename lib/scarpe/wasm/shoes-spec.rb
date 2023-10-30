@@ -47,4 +47,16 @@ class Scarpe::Wasm::CapybaraTestCase < Minitest::Test
     Capybara.reset_sessions!
     Capybara.use_default_driver
   end
+
+  # Run the ShoesSpec code within the supplied block
+  #
+  # @yield the code to run using the ShoesSpec API
+  def run_shoes_spec_code(index_uri = nil)
+    visit(index_uri) if index_uri
+
+    assert_selector("#wrapper-wvroot", wait: 5)
+    assert_selector("#wrapper-wvroot div", wait: 5)
+
+    yield
+  end
 end
