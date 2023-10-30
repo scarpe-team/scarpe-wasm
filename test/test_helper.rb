@@ -9,39 +9,25 @@ require "fileutils"
 require "socket"
 
 require "scarpe/components/unit_test_helpers"
+require_relative "../lib/scarpe/wasm/shoes-spec"
 
 ## Capybara Setup
-
-require "capybara"
-require 'capybara/minitest'
 Capybara.default_driver = :selenium_chrome_headless
 Capybara.run_server = false
 Capybara.app_host = "http://localhost:8080"
-
 # In setup, this will change the Capybara driver
 #Capybara.current_driver = :selenium_headless # example: use headless Firefox
-
-class CapybaraTestCase < Minitest::Test
-  include Capybara::DSL
-  include Capybara::Minitest::Assertions
-
-  # Make sure to call super in child-class teardown if there is one
-  def teardown
-    Capybara.reset_sessions!
-    Capybara.use_default_driver
-  end
-end
 
 TEST_DATA = {
   wasm_built: false,
 }
 
 # This ensures that a combined package is built for testing, once per test process.
-class WasmPackageTestCase < CapybaraTestCase
+class WasmPackageTestCase < Scarpe::Wasm::CapybaraTestCase
   TEST_CACHE_DIR = File.expand_path(File.join __dir__, "../test/cache")
   TEST_CACHE_WASM = File.join(TEST_CACHE_DIR, "packed_ruby.wasm")
 
-  MAX_SERVER_STARTUP_WAIT = 5.0
+  include Scarpe::Wasm::PortUtils
 
   def setup
     super if defined?(super)
@@ -62,27 +48,6 @@ class WasmPackageTestCase < CapybaraTestCase
     raise "Wasify didn't create packed_ruby.wasm!" unless File.exist?("packed_ruby.wasm")
 
     TEST_DATA[:wasm_built] = true
-  end
-
-  def port_open?(ip, port_num)
-    begin
-      TCPSocket.new(ip, port_num)
-    rescue Errno::ECONNREFUSED
-      return false
-    end
-    return true
-  end
-
-  def wait_until_port_open(ip, port_num)
-    t_start = Time.now
-    loop do
-      if Time.now - t_start > MAX_SERVER_STARTUP_WAIT
-        raise "Server on port #{port_num} didn't start up in time!"
-      end
-
-      sleep 0.1
-      return if port_open?(ip, port_num)
-    end
   end
 
   def with_app_server(app_name, &block)
@@ -110,11 +75,6 @@ class WasmPackageTestCase < CapybaraTestCase
       yield
     end
   end
-
-end
-
-# Any final shutdown?
-Minitest.after_run do
 end
 
 require "minitest/autorun"
