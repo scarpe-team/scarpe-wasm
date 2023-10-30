@@ -59,7 +59,7 @@ class WasmPackageTestCase < Scarpe::Wasm::CapybaraTestCase
       index_name = "index_#{app_name}.html"
       File.write(index_name, File.read("index.html").gsub("APP_NAME", app_name))
       server_pid = Kernel.spawn("bundle exec ruby -run -e httpd . -p 8080")
-      wait_until_port_open("127.0.0.1", 8080)
+      wait_until_port_working("127.0.0.1", 8080)
 
       yield(index_name)
     end

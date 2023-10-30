@@ -14,7 +14,7 @@ module Scarpe; module Wasm; end; end
 module Scarpe::Wasm::PortUtils
   MAX_SERVER_STARTUP_WAIT = 5.0
 
-  def port_open?(ip, port_num)
+  def port_working?(ip, port_num)
     begin
       TCPSocket.new(ip, port_num)
     rescue Errno::ECONNREFUSED
@@ -23,7 +23,7 @@ module Scarpe::Wasm::PortUtils
     return true
   end
 
-  def wait_until_port_open(ip, port_num, max_wait: MAX_SERVER_STARTUP_WAIT)
+  def wait_until_port_working(ip, port_num, max_wait: MAX_SERVER_STARTUP_WAIT)
     t_start = Time.now
     loop do
       if Time.now - t_start > max_wait
@@ -31,7 +31,7 @@ module Scarpe::Wasm::PortUtils
       end
 
       sleep 0.1
-      return if port_open?(ip, port_num)
+      return if port_working?(ip, port_num)
     end
   end
 end
