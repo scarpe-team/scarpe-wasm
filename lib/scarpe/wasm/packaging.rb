@@ -181,6 +181,7 @@ module Scarpe::Wasm::Packaging
             const buffer = await response.arrayBuffer();
             const module = await WebAssembly.compile(buffer);
             const { vm } = await DefaultRubyVM(module);
+            window.RubyVM = vm;
             const shoes_app = await fetch("#{app_file_url}");
 
             vm.printVersion();
