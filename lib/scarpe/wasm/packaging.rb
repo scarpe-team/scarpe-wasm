@@ -56,8 +56,8 @@ module Scarpe::Wasm::Packaging
     # @param app_dir [String] the directory containing application code and a Gemfile
     # @param install_dir [String] a directory to install the resulting built code to
     def initialize(app_dir: Dir.pwd, install_dir: nil, prepack: false)
-      @app_dir = app_dir
-      @install_dir = install_dir
+      @app_dir = File.expand_path(app_dir)
+      @install_dir = File.expand_path(install_dir) if install_dir
       @prepack = prepack
     end
 
@@ -114,6 +114,8 @@ module Scarpe::Wasm::Packaging
 
         unless File.read("Gemfile.lock").include?("wasify")
           # Don't fail now, but this is probably going to fail when we attempt to package.
+          # TODO: how can we stop requiring wasify be in the Gemfile, as long as it's installed in
+          # the path somewhere?
           puts "WARNING: your Gemfile does not include the wasify gem! It's needed for packaging."
         end
       end
@@ -159,11 +161,16 @@ module Scarpe::Wasm::Packaging
           if @prepack
             system("bundle exec wasify prepack") || raise("Couldn't prepack using wasify in #{File.expand_path(@app_dir)}!")
           end
+
+          # We replace wasify's index.html with our own
+          File.write("index.html", app_index_text("http://localhost:8080/APP_NAME.rb"))
         end
 
-        FileUtils.mkdir_p @install_dir
-        FileUtils.mv "packed_ruby.wasm", @install_dir
-        FileUtils.mv "index.html", @install_dir
+        if @install_dir && File.expand_path(@app_dir) != File.expand_path(@install_dir)
+          FileUtils.mkdir_p @install_dir
+          FileUtils.mv "packed_ruby.wasm", @install_dir
+          FileUtils.mv "index.html", @install_dir
+        end
       end
 
       @build_done = true
@@ -176,8 +183,7 @@ module Scarpe::Wasm::Packaging
         <script>
           const { DefaultRubyVM } = window["ruby-wasm-wasi"];
           const main = async () => {
-            const response = await fetch(
-              "http://localhost:8080/packed_ruby.wasm");
+            const response = await fetch("http://localhost:8080/packed_ruby.wasm");
             const buffer = await response.arrayBuffer();
             const module = await WebAssembly.compile(buffer);
             const { vm } = await DefaultRubyVM(module);
