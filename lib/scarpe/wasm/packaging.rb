@@ -166,10 +166,15 @@ module Scarpe::Wasm::Packaging
           File.write("index.html", app_index_text("http://localhost:8080/APP_NAME.rb"))
         end
 
-        if @install_dir && File.expand_path(@app_dir) != File.expand_path(@install_dir)
-          FileUtils.mkdir_p @install_dir
-          FileUtils.mv "packed_ruby.wasm", @install_dir
-          FileUtils.mv "index.html", @install_dir
+        if !@prepack && @install_dir && File.expand_path(@app_dir) != File.expand_path(@install_dir)
+          begin
+            FileUtils.mkdir_p @install_dir
+            FileUtils.mv "packed_ruby.wasm", @install_dir
+            FileUtils.mv "index.html", @install_dir
+          rescue
+            STDERR.puts "Error while installing from #{@app_dir.inspect} to #{@install_dir.inspect}"
+            raise
+          end
         end
       end
 
