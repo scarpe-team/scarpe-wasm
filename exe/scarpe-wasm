@@ -117,22 +117,6 @@ when "app-index"
   index_contents = pkg.app_index_text("http://localhost:8080/#{rb_file}")
   File.write(index_file, index_contents)
   puts "Created app-index file as #{index_file.inspect}"
-when "create-packed-file"
-  pkg = Scarpe::Wasm::Packaging.default_package(prepack: use_prepack)
-  # If you use --dev, need to rebuild the default package every time since it's local files.
-  # If we're using a path: or git: source, don't think there's an easy way to detect that
-  # and auto-rebuild every time.
-  if use_rebuild || use_dev
-    pkg.clean_app_dir
-    pkg.build(force: true)
-  else
-    # This makes sure there's a fairly recent build, but doesn't build if something recent exists.
-    # Note that it does *not* try to inspect the relevant framework dirs for changes, just checks
-    # how old the build file is.
-    Scarpe::Wasm::Packaging.ensure_default_build
-  end
-
-  FileUtils.cp "#{pkg.install_dir}/packed_ruby.wasm", verb_target
 when "run"
   # TODO: how do I ensure there's a good default build for "scarpe-wasm run" without --dev?
   raise "Can't find file: #{verb_target.inspect}!" unless File.exist?(verb_target)
