@@ -12,6 +12,8 @@ require 'capybara/minitest'
 # We need the list of Drawable classes and the set of Shoes styles for each
 require "shoes"
 
+require "json"
+
 module Scarpe; end
 
 module Scarpe::Wasm
@@ -62,7 +64,7 @@ module Scarpe::Wasm
       assert_selector("body", wait: 5)
       assert_selector("#wrapper-wvroot", wait: 5)
       assert_selector("#wrapper-wvroot div", wait: 5)
-      page.execute_script "window.RubyVM.eval('require \"scarpe/wasm/shoes-spec-browser\"')"
+      page.execute_script "window.RubyVM.eval('require \"js\"; require \"scarpe/wasm/shoes-spec-browser\"')"
 
       #STDERR.puts "BODY:\n" + page.evaluate_script("document.body.innerHTML")
 
@@ -72,9 +74,72 @@ module Scarpe::Wasm
     Shoes::Drawable.drawable_classes.each do |klass|
       d_name = klass.dsl_name
       define_method(d_name) do |*specs|
-        args = [d_name, *specs].map(&:to_s).map(&:inspect).join(",")
-        drawable_id = page.execute_script("window.RubyVM.eval('ShoesSpecBrowser.instance.query_drawable_id(#{args})');")
+        proxy = CapybaraTestProxy.new(d_name, specs, page:)
       end
     end
+  end
+
+  class JSConnection
+    def initialize(page:)
+      @page = page
+    end
+
+    # Execute the Ruby code. Note that there is no return value
+    #
+    # @return [void]
+    def ruby_exec(code)
+      @page.execute_script "window.RubyVM.eval(#{JSON.dump code})"
+    end
+
+    # Execute the Ruby code. Get a JSON-serializable return value back.
+    #
+    # @return the JSON-serializable return value
+    def ruby_eval(code)
+      code = "window.RubyVM.eval(`JS.global[:window][:return_value] = JSON.dump(begin;#{code};end)`)"
+      @page.execute_script code
+      JSON.load @page.evaluate_script "window.return_value"
+    end
+  end
+
+  class CapybaraTestProxy
+    # The proxy ID is not normally the same as the Shoes linkable_id - it's internally assigned and arbitrary
+    attr_reader :id
+
+    @@proxy_counter = 1
+
+    def initialize(drawable_type, query_by, page:)
+      @id = @@proxy_counter
+      @drawable_type = drawable_type
+      @query_by = query_by
+      @js_conn = JSConnection.new(page:)
+      @@proxy_counter += 1
+
+      d_class = Shoes::Drawable.drawable_class_by_name(drawable_type)
+      raise(NoDrawablesFoundError, "Can't find Drawable class for #{drawable_type.inspect}!") if d_class.nil?
+
+      # Define methods just on this one object
+      s_class = self.singleton_class
+      js_conn = @js_conn
+
+      d_class.shoes_style_names.each do |style_name|
+        s_class.define_method(style_name) do
+          js_conn.ruby_eval("ShoesSpecBrowser.instance.proxy_method(#{@id}, #{style_name.inspect})")
+        end
+      end
+
+      [:click, :hover, :leave].each do |event|
+        s_class.define_method("trigger_#{event}") do |*args|
+          # TODO: pass arguments through
+          js_conn.ruby_exec("ShoesSpecBrowser.instance.proxy_trigger(#{@id}, #{event.inspect})")
+        end
+      end
+
+      js_conn.ruby_exec("ShoesSpecBrowser.instance.create_query_proxy(#{@id}, #{drawable_type.inspect}, #{serialize query_by})")
+    end
+
+    def serialize(data)
+      JSON.dump data
+    end
+
   end
 end
