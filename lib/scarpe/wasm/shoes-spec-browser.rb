@@ -66,7 +66,15 @@ class ShoesSpecBrowser
   # Call a method on a proxy by proxy ID
   def proxy_method(id, method_name, args)
     p = @query_proxies[id]
-    p.send(method_name, *args)
+    val = p.send(method_name, *args)
+
+    # By default, return values are going to get treated as Strings.
+    # That's not useful for Drawables (or many other types.)
+    if val.is_a?(Shoes::Drawable)
+      return ["shoes_obj", val.class.dsl_name, val.linkable_id]
+    end
+
+    ["value", val]
   end
 
   # Trigger a JS event for the specified proxy drawable and event name

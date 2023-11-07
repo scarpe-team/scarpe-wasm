@@ -97,7 +97,21 @@ module Scarpe::Wasm
     def ruby_eval(code)
       code = "window.RubyVM.eval(`JS.global[:window][:return_value] = JSON.dump(begin;#{code};end)`)"
       @page.execute_script code
-      JSON.load @page.evaluate_script "window.return_value"
+      data = JSON.load @page.evaluate_script "window.return_value"
+
+      if data.is_a?(Array) && data.size > 1
+        case data[0]
+        when "value"
+          return data[1]
+        when "shoes_obj"
+          # ["shoes_obj", "button", 37] - for Shoes::Button w/ linkable_id 37
+          p = CapybaraTestProxy.new(data[1], "id:#{data[2]}", page: @page)
+        else
+          raise "Unrecognized data type from ruby_eval: #{data.inspect}"
+        end
+      else
+        raise "Unrecognized return value from ruby_eval: #{data.inspect}"
+      end
     end
   end
 
