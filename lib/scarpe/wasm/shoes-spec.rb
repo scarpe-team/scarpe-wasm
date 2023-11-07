@@ -123,15 +123,32 @@ module Scarpe::Wasm
 
       d_class.shoes_style_names.each do |style_name|
         s_class.define_method(style_name) do
-          js_conn.ruby_eval("ShoesSpecBrowser.instance.proxy_method(#{@id}, #{style_name.inspect})")
+          js_conn.ruby_eval("ShoesSpecBrowser.instance.proxy_method(#{@id}, #{style_name.inspect}, [])")
         end
       end
 
-      [:click, :hover, :leave].each do |event|
+      [:click, :hover, :leave, :change].each do |event|
         s_class.define_method("trigger_#{event}") do |*args|
-          # TODO: pass arguments through
-          js_conn.ruby_exec("ShoesSpecBrowser.instance.proxy_trigger(#{@id}, #{event.inspect})")
+          js_conn.ruby_exec("ShoesSpecBrowser.instance.proxy_trigger(#{@id}, #{event.to_s.inspect}, #{serialize args})")
         end
+      end
+
+      s_class.define_method(:method_missing) do |m_name, *args|
+        # Instance methods on the local Drawable subclass get forwarded
+        if d_class.instance_methods.include?(m_name.to_sym)
+          return js_conn.ruby_eval("ShoesSpecBrowser.instance.proxy_method(#{@id}, #{m_name.to_s.inspect}, #{serialize args})")
+        end
+
+        raise NoMethodError, "undefined method `to_ary' for #{s_class.inspect}"
+      end
+
+      s_class.define_method(:respond_to_missing) do |m_name, priv = false|
+        # Instance methods on the local Drawable subclass get forwarded
+        if d_class.instance_methods.include?(m_name.to_sym)
+          return true
+        end
+
+        false
       end
 
       js_conn.ruby_exec("ShoesSpecBrowser.instance.create_query_proxy(#{@id}, #{drawable_type.inspect}, #{serialize query_by})")

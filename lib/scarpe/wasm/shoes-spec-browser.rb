@@ -64,13 +64,13 @@ class ShoesSpecBrowser
   end
 
   # Call a method on a proxy by proxy ID
-  def proxy_method(id, method_name, *args)
+  def proxy_method(id, method_name, args)
     p = @query_proxies[id]
     p.send(method_name, *args)
   end
 
   # Trigger a JS event for the specified proxy drawable and event name
-  def proxy_trigger(id, event, *args)
+  def proxy_trigger(id, event, args)
     p = @query_proxies[id]
     cb_name = "#{p.linkable_id}-#{event}"
     Scarpe::Wasm::DisplayService.instance.app.handle_callback(cb_name, *args)
