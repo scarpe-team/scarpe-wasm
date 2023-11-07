@@ -7,6 +7,7 @@
 # for e.g. packaging.
 
 require_relative "wasm/version"
+require_relative "wasm/errors"
 
 require_relative "wasm/wasm_calls"
 require_relative "wasm/web_wrangler"
