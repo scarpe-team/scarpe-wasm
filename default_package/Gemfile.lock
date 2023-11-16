@@ -6,14 +6,15 @@ GIT
 
 GIT
   remote: https://github.com/scarpe-team/scarpe.git
-  revision: 651d1ab28c18cb8869db1620f813cf6aeaff7255
+  revision: fc9f85a90a4f6cb60e57994e51f820069df8d3c9
   glob: lacci/*.gemspec
   specs:
     lacci (0.3.0)
+      scarpe-components
 
 GIT
   remote: https://github.com/scarpe-team/scarpe.git
-  revision: 651d1ab28c18cb8869db1620f813cf6aeaff7255
+  revision: fc9f85a90a4f6cb60e57994e51f820069df8d3c9
   glob: scarpe-components/*.gemspec
   specs:
     scarpe-components (0.3.0)
