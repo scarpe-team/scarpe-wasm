@@ -105,7 +105,7 @@ module Scarpe::Wasm
           return data[1]
         when "shoes_obj"
           # ["shoes_obj", "button", 37] - for Shoes::Button w/ linkable_id 37
-          p = CapybaraTestProxy.new(data[1], "id:#{data[2]}", page: @page)
+          return CapybaraTestProxy.new(data[1], "id:#{data[2]}", page: @page)
         else
           raise "Unrecognized data type from ruby_eval: #{data.inspect}"
         end
@@ -171,6 +171,5 @@ module Scarpe::Wasm
     def serialize(data)
       JSON.dump data
     end
-
   end
 end

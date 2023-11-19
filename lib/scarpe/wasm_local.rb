@@ -15,13 +15,14 @@ Shoes::Log.configure_logger(Shoes::Log::DEFAULT_LOG_CONFIG)
 
 require "scarpe/components/segmented_file_loader"
 loader = Scarpe::Components::SegmentedFileLoader.new
+SCARPE_WASM_DEFAULT_FILE_LOADER = loader
+
 Shoes.add_file_loader loader
 
-# TODO: Shoes::Spec
-#if ENV["SHOES_SPEC_TEST"]
-#  require_relative "shoes_spec"
-#  Shoes::Spec.instance = Scarpe::Test
-#end
+# When we require Wasm's shoes-spec it will fill this in on the host side
+module Scarpe; module Test; end; end
+require "shoes-spec"
+Shoes::Spec.instance = Scarpe::Test
 
 require "scarpe/components/html"
 module Scarpe::Wasm
@@ -38,3 +39,18 @@ require_relative "wasm"
 require_relative "wasm/wasm_local_display"
 
 Shoes::DisplayService.set_display_service_class(Scarpe::Wasm::DisplayService)
+
+# Called when loading a Shoes app into the browser.
+def browser_shoes_code(url, code)
+  if url.end_with?(".sspec") || url.end_with?(".scas")
+    # Segmented app - host will run the test code, we'll run the app
+    _fm, segmap = Scarpe::Components::SegmentedFileLoader.front_matter_and_segments_from_file(code)
+    app_code = segmap.values.first
+    eval app_code
+  elsif url.end_with(".rb")
+    # Standard Ruby Shoes app, just load it
+    eval code
+  else
+    raise "ERROR! Unknown file extension for browser URL #{url.inspect}! Should end in .rb or .sspec!"
+  end
+end
