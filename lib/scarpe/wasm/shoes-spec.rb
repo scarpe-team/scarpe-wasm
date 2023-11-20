@@ -2,12 +2,6 @@
 
 require "capybara"
 require 'capybara/minitest'
-#Capybara.default_driver = :selenium_chrome_headless
-#Capybara.run_server = false
-#Capybara.app_host = "http://localhost:8080"
-
-# In setup, this will change the Capybara driver
-#Capybara.current_driver = :selenium_headless # example: use headless Firefox
 
 # We need the list of Drawable classes and the set of Shoes styles for each
 require "shoes"
@@ -57,24 +51,33 @@ module Scarpe::Wasm
 
     # Run the ShoesSpec code within the supplied block
     #
+    # @raise [Shoes::Error,Scarpe::Error] Exception raised if the application didn't start or the spec code raises an uncaught exception
+    #
     # @yield the code to run using the ShoesSpec API
     def run_shoes_spec_code(index_uri = nil)
       visit(index_uri) if index_uri
 
-      assert_selector("body", wait: 5)
-      assert_selector("#wrapper-wvroot", wait: 5)
-      assert_selector("#wrapper-wvroot div", wait: 5)
-      page.execute_script "window.RubyVM.eval('require \"js\"; require \"scarpe/wasm/shoes-spec-browser\"')"
+      if has_selector?("#wrapper-wvroot div", wait: 10)
+        # Load Shoes-Spec test code into the browser as Wasm
+        page.execute_script "window.RubyVM.eval('require \"js\"; require \"scarpe/wasm/shoes-spec-browser\"')"
 
-      #STDERR.puts "BODY:\n" + page.evaluate_script("document.body.innerHTML")
+        yield
+      else
+        require 'pp'
+        logs = page.driver.browser.logs.get(:browser)
+        STDERR.puts "LOGS:\n#{pp logs}"
 
-      yield
+        # Looks like the Shoes app never loaded
+        # TODO: add a proper error class for this to Lacci and/or Scarpe-Wasm
+        page_body = page.evaluate_script("document.body.outerHTML")
+        raise Shoes::Error, "Scarpe-Wasm application never started! #{page_body} LOGS: #{logs.inspect}"
+      end
     end
 
     Shoes::Drawable.drawable_classes.each do |klass|
       d_name = klass.dsl_name
       define_method(d_name) do |*specs|
-        proxy = CapybaraTestProxy.new(d_name, specs, page:)
+        CapybaraTestProxy.new(d_name, specs, page:)
       end
     end
   end

@@ -196,10 +196,11 @@ module Scarpe::Wasm::Packaging
             const shoes_app = await fetch("#{app_file_url}");
 
             vm.printVersion();
-            vm.eval(`require "bundler/setup"; require "scarpe/wasm_local"`);
+            vm.eval(`require "bundler/setup"; require "scarpe/wasm_local"; require "js"`);
             shoes_code = await shoes_app.text();
+            window.RubyAppCode = shoes_code;
             console.log(shoes_code);
-            vm.eval(shoes_code);
+            vm.eval("browser_shoes_code '#{app_file_url}', JS.eval('return window.RubyAppCode').to_s");
           };
 
           main();

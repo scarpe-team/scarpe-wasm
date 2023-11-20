@@ -138,11 +138,60 @@ when "run"
     # how old the build file is.
     Scarpe::Wasm::Packaging.ensure_default_build
   end
+
   index_name = pkg.build_app_index(verb_target)
   index_url = "http://localhost:8080/#{index_name}"
   puts "URL: #{index_url}"
   system("open -a \"Google Chrome\" #{index_url}")
-  Scarpe::Wasm::HTTPServer.new(dir: pkg.install_dir, port: 8080).start
+
+  if verb_target.end_with?(".rb")
+    # Let the HTTP server run until the user cancels it
+    Scarpe::Wasm::HTTPServer.new(dir: pkg.install_dir, port: 8080).start
+  elsif verb_target.end_with?(".sspec") || verb_target.end_with?(".scas")
+    require "scarpe/components/segmented_file_loader"
+    code = File.read verb_target
+    _fm, segmap = Scarpe::Components::SegmentedFileLoader.front_matter_and_segments_from_file(code)
+    if segmap.size == 1
+      # No test code - just run until the user cancels
+      Scarpe::Wasm::HTTPServer.new(dir: pkg.install_dir, port: 8080).start
+      # This should never be reached
+      exit -1
+    end
+    test_code = segmap.values[1]
+
+    require "scarpe/wasm/shoes-spec"
+
+    begin
+      pid = fork do
+        Scarpe::Wasm::HTTPServer.new(dir: pkg.install_dir, port: 8080).start
+      end
+
+      require 'selenium-webdriver'
+      Capybara.register_driver :logging_selenium_chrome_headless do |app|
+        options = Selenium::WebDriver::Chrome::Options.new
+        options.add_option("goog:loggingPrefs", {browser: 'ALL'})
+        options.add_argument("--headless")
+
+        Capybara::Selenium::Driver.new(app,
+                                       options:,
+                                       browser: :chrome,
+                                       )
+      end
+      Capybara.default_driver = :logging_selenium_chrome_headless
+      Capybara.run_server = false
+      Capybara.app_host = "http://localhost:8080"
+
+      class RunCommandLineShoesSpecTests < Scarpe::Wasm::CapybaraTestCase; end
+      RunCommandLineShoesSpecTests.define_method("test_command_line") do
+        run_shoes_spec_code("http://localhost:8080/#{verb_target}") { eval test_code }
+      end
+      Minitest.run []
+    ensure
+      Process.kill("KILL", pid) if pid
+    end
+  else
+    raise "Unrecognized Shoes extension for file #{verb_target.inspect}!"
+  end
 when "env"
   print_env
 else
