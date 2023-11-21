@@ -47,7 +47,7 @@ def browser_shoes_code(url, code)
     _fm, segmap = Scarpe::Components::SegmentedFileLoader.front_matter_and_segments_from_file(code)
     app_code = segmap.values.first
     eval app_code
-  elsif url.end_with(".rb")
+  elsif url.end_with?(".rb")
     # Standard Ruby Shoes app, just load it
     eval code
   else
