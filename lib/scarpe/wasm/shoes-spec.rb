@@ -65,9 +65,13 @@ module Scarpe::Wasm
       else
         require 'pp'
         logs = page.driver.browser.logs.get(:browser)
-        error_logs = logs.select { |log| log.level != "INFO" }
+        reduced_logs = logs.select do |log|
+          log.level != "INFO" &&
+            (log.level != "WARNING" || !log.message.include?("its extensions are not built"))
+        end.map { |log| [log.level, log.message] }
         severe_logs = logs.select { |log| log.level == "SEVERE" }
-        STDERR.puts "LOGS:\n#{pp error_logs}"
+        severe_msgs = severe_logs.map(&:message)
+        STDERR.puts "LOGS:\n#{pp reduced_logs}"
 
         # Looks like the Shoes app never loaded
         # TODO: add a proper error class for this to Lacci and/or Scarpe-Wasm
