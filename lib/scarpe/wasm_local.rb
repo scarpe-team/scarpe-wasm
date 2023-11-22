@@ -19,6 +19,24 @@ SCARPE_WASM_DEFAULT_FILE_LOADER = loader
 
 Shoes.add_file_loader loader
 
+Shoes::FONTS.push(
+  "Helvetica",
+  "Arial",
+  "Arial Black",
+  "Verdana",
+  "Tahoma",
+  "Trebuchet MS",
+  "Impact",
+  "Gill Sans",
+  "Times New Roman",
+  "Georgia",
+  "Palatino",
+  "Baskerville",
+  "Courier",
+  "Lucida",
+  "Monaco",
+)
+
 # When we require Wasm's shoes-spec it will fill this in on the host side
 module Scarpe; module Test; end; end
 require "shoes-spec"

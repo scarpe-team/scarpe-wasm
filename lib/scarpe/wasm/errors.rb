@@ -9,14 +9,6 @@ module Scarpe
 
   class UnknownEventTypeError < Scarpe::Error; end
 
-  class UnexpectedFiberTransferError < Scarpe::Error; end
-
-  class MultipleDrawablesFoundError < Scarpe::Error; end
-
-  class NoDrawablesFoundError < Scarpe::Error; end
-
-  class InvalidPromiseError < Scarpe::Error; end
-
   class MissingAppError < Scarpe::Error; end
 
   class MissingDocRootError < Scarpe::Error; end
@@ -26,8 +18,6 @@ module Scarpe
   class IllegalSubscribeEventError < Scarpe::Error; end
 
   class IllegalDispatchEventError < Scarpe::Error; end
-
-  class MissingBlockError < Scarpe::Error; end
 
   class DuplicateCallbackError < Scarpe::Error; end
 
@@ -41,45 +31,11 @@ module Scarpe
 
   class NonexistentEvalResultError < Scarpe::Error; end
 
-  class JSRedrawError < Scarpe::Error; end
-
-  class SingletonError < Scarpe::Error; end
-
-  class ConnectionError < Scarpe::Error; end
-
-  class DatagramSendError < Scarpe::Error; end
-
-  class InvalidOperationError < Scarpe::Error; end
-
   class MissingAttributeError < Scarpe::Error; end
-
-  # This error indicates a problem when running ConfirmedEval
-  class JSEvalError < Scarpe::Error
-    def initialize(data)
-      @data = data
-      super(data[:msg] || (self.class.name + "!"))
-    end
-  end
-
-  # An error running the supplied JS code string in confirmed_eval
-  class JSRuntimeError < JSEvalError; end
-
-  # The code timed out for some reason
-  class JSTimeoutError < JSEvalError; end
-
-  # We got weird or nonsensical results that seem like an error on WebWrangler's part
-  class JSInternalError < JSEvalError; end
-
-  # An error occurred which would normally be handled by shutting down the app
-  class AppShutdownError < Scarpe::Error; end
 
   class InvalidClassError < Scarpe::Error; end
 
   class MissingClassError < Scarpe::Error; end
-
-  class MultipleShoesSpecRunsError < Scarpe::Error; end
-
-  class EmptyPageNotSetError < Scarpe::Error; end
 
   class BadDisplayClassType < Scarpe::Error; end
 end

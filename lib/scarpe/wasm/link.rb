@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Scarpe::Wasm
-  class Link < Drawable
+  class Link < TextDrawable
     def initialize(properties)
       super
 

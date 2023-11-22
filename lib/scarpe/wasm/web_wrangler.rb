@@ -357,6 +357,10 @@ module Scarpe
         @webwrangler.dom_change("document.getElementById(\"" + html_id + "\").innerHTML = `" + new_html + "`; true")
       end
 
+      def outer_html=(new_html)
+        @webwrangler.dom_change("document.getElementById(\"" + html_id + "\").outerHTML = `" + new_html + "`; true")
+      end
+
       # Update the JS DOM element's inner_html. The given Ruby value will be inspected and assigned.
       #
       # @param attribute [String] the attribute name

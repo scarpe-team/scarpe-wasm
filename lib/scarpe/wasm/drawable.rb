@@ -181,6 +181,8 @@ module Scarpe::Wasm
 
     # This gets an updater for just this element and its children, if any.
     # It is normally called by the drawable itself to do its DOM management.
+    # Drawables are required to use their html_id for their outermost element,
+    # to make sure that remove(), hidden() etc. affect every part of the drawable.
     #
     # @return [Scarpe::WebWrangler::ElementWrangler] a DOM object manager
     def html_element
@@ -198,7 +200,7 @@ module Scarpe::Wasm
     #
     # @return [String] the HTML ID
     def html_id
-      object_id.to_s
+      @linkable_id.to_s
     end
 
     # to_html is intended to get the HTML DOM rendering of this object and its children.
@@ -236,15 +238,25 @@ module Scarpe::Wasm
       html_element.remove
     end
 
-    # Request a full redraw of all drawables.
+    # Request a full redraw of the entire window, including the entire tree of
+    # drawables and the outer "empty page" frame.
     #
-    # It's really hard to do dirty-tracking here because the redraws are fully asynchronous.
-    # And so we can't easily cancel one "in flight," and we can't easily pick up the latest
-    # changes... And we probably don't want to, because we may be halfway through a batch.
+    # @return [void]
+    def full_window_redraw!
+      DisplayService.instance.app.request_redraw!
+    end
+
+    # Request a full redraw of this drawable, including all its children.
+    # Can be overridden in drawable subclasses if needed. An override would normally
+    # only be needed if re-rendering the element with the given html_id
+    # wasn't enough (and then remove would also need to be overridden.)
+    #
+    # This occurs by default if a property is changed and the drawable
+    # doesn't remove its change in property_changed.
     #
     # @return [void]
     def needs_update!
-      DisplayService.instance.app.request_redraw!
+      html_element.outer_html = to_html
     end
 
     # Generate JS code to trigger a specific event name on this drawable with the supplies arguments.

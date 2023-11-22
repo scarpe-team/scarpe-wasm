@@ -2,7 +2,7 @@
 
 module Scarpe::Wasm
   class ListBox < Drawable
-    attr_reader :selected_item, :items, :height, :width, :choose
+    attr_reader :items, :height, :width, :chosen
 
     def initialize(properties)
       super
@@ -14,7 +14,7 @@ module Scarpe::Wasm
     end
 
     def properties_changed(changes)
-      selected = changes.delete("selected_item")
+      selected = changes.delete("chosen")
       if selected
         html_element.value = selected
       end
@@ -22,29 +22,7 @@ module Scarpe::Wasm
     end
 
     def element
-      onchange = handler_js_code("change", "this.options[this.selectedIndex].value")
-
-      select_attrs = { id: html_id, onchange: onchange, style: style }
-      option_attrs = { value: nil, selected: false }
-
-      HTML.render do |h|
-        h.select(**select_attrs) do
-          items.each do |item|
-            h.option(**option_attrs, value: item, selected: (item == selected_item)) { item }
-          end
-        end
-      end
-    end
-
-    protected
-
-    def style
-      styles = super
-
-      styles[:height] = Dimensions.length(height) if height
-      styles[:width] = Dimensions.length(width) if width
-
-      styles
+      render("list_box")
     end
   end
 end

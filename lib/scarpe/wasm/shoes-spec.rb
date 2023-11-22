@@ -76,7 +76,7 @@ module Scarpe::Wasm
         # Looks like the Shoes app never loaded
         # TODO: add a proper error class for this to Lacci and/or Scarpe-Wasm
         page_body = page.evaluate_script("document.body.outerHTML")
-        raise Shoes::Error, "Scarpe-Wasm application never started! #{page_body} SEVERE LOGS: #{severe_logs.inspect}"
+        raise Shoes::Error, "Scarpe-Wasm application never started! #{page_body} SEVERE LOGS: #{severe_msgs.inspect}"
       end
     end
 
