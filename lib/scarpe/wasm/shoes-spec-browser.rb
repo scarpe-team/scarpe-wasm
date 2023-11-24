@@ -14,38 +14,6 @@ class ShoesSpecBrowser
     @query_proxies = {}
   end
 
-  #def drawable_by_id(id)
-  #  drawable = @drawable_by_id[id]
-  #  if drawable.destroyed
-  #    # Looks deleted
-  #    drawable = nil
-  #  end
-  #
-  #  if !drawable
-  #    find_all_drawable_ids
-  #    drawable = @drawable_by_id[id] # Could still be nil, but this should be fully up to date
-  #  end
-  #
-  #  drawable
-  #end
-
-  private
-
-  #def find_all_drawable_ids
-  #  @drawable_by_id = {}
-  #  root = Shoes::App.instance.find_drawables_by("DocumentRoot")
-  #  drawables = [root[0]]
-  #  until drawables.empty?
-  #    first = drawables.pop
-  #    @drawable_by_id[first.linkable_id] = first
-  #    if first.respond_to?(:children)
-  #      drawables += first.children
-  #    end
-  #  end
-  #end
-
-  public
-
   # We can't easily return Ruby objects or even data from Ruby eval calls. So for queries
   # like button() we create a JS-side proxy object with an ID we got from host-side
   # Ruby. Then when it makes other calls (e.g. button.text) on that proxy, we know
