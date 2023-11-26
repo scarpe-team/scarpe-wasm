@@ -86,6 +86,11 @@ module Scarpe::Wasm
         CapybaraTestProxy.new(d_name, specs, page:)
       end
     end
+
+    # Find a drawable without necessarily knowing its class
+    def drawable(specs)
+      CapybaraTestProxy.new(nil, specs, page:)
+    end
   end
 
   class JSConnection
@@ -137,37 +142,42 @@ module Scarpe::Wasm
       @js_conn = JSConnection.new(page:)
       @@proxy_counter += 1
 
-      d_class = Shoes::Drawable.drawable_class_by_name(drawable_type)
-      raise(NoDrawablesFoundError, "Can't find Drawable class for #{drawable_type.inspect}!") if d_class.nil?
-
-      # Define methods just on this one object
       s_class = self.singleton_class
       js_conn = @js_conn
 
-      d_class.shoes_style_names.each do |style_name|
-        s_class.define_method(style_name) do
-          js_conn.ruby_eval("ShoesSpecBrowser.instance.proxy_method(#{@id}, #{style_name.inspect}, [])")
+      # If we know the drawable type, we can define styles and similar.
+      if drawable_type
+        d_class = Shoes::Drawable.drawable_class_by_name(drawable_type)
+        raise(NoDrawablesFoundError, "Can't find Drawable class for #{drawable_type.inspect}!") if d_class.nil?
+
+        d_class.shoes_style_names.each do |style_name|
+          s_class.define_method(style_name) do
+            js_conn.ruby_eval("ShoesSpecBrowser.instance.proxy_method(#{@id}, #{style_name.inspect}, [])")
+          end
+        end
+
+        [:click, :hover, :leave, :change].each do |event|
+          s_class.define_method("trigger_#{event}") do |*args|
+            js_conn.ruby_exec("ShoesSpecBrowser.instance.proxy_trigger(#{@id}, #{event.to_s.inspect}, #{serialize args})")
+          end
         end
       end
 
-      [:click, :hover, :leave, :change].each do |event|
-        s_class.define_method("trigger_#{event}") do |*args|
-          js_conn.ruby_exec("ShoesSpecBrowser.instance.proxy_trigger(#{@id}, #{event.to_s.inspect}, #{serialize args})")
-        end
-      end
-
+      # We can always use method_missing for unknown methods. This is also a fallback
+      # for all methods when the drawable type isn't known.
       s_class.define_method(:method_missing) do |m_name, *args|
         # Instance methods on the local Drawable subclass get forwarded
         if d_class.instance_methods.include?(m_name.to_sym)
           return js_conn.ruby_eval("ShoesSpecBrowser.instance.proxy_method(#{@id}, #{m_name.to_s.inspect}, #{serialize args})")
         end
 
-        raise NoMethodError, "undefined method `to_ary' for #{s_class.inspect}"
+        raise NoMethodError, "undefined method `#{m_name}' for #{s_class.inspect}"
       end
 
+      # We can't easily provide a good respond_to? for methods if we don't know the class.
       s_class.define_method(:respond_to_missing) do |m_name, priv = false|
         # Instance methods on the local Drawable subclass get forwarded
-        if d_class.instance_methods.include?(m_name.to_sym)
+        if d_class && d_class.instance_methods.include?(m_name.to_sym)
           return true
         end
 
