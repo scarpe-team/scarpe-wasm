@@ -15,7 +15,7 @@ You'll need to [install wasi-vfs](https://github.com/kateinoigakukun/wasi-vfs#in
 Here's how that's done for the specific current version needed by wasify:
 
 ``` bash
-$ export WASI_VFS_VERSION=0.1.1
+$ export WASI_VFS_VERSION=0.5.0
 
 # For x86_64 macOS host machine
 $ curl -LO "https://github.com/kateinoigakukun/wasi-vfs/releases/download/v${WASI_VFS_VERSION}/wasi-vfs-cli-x86_64-apple-darwin.zip"
