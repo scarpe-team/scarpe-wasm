@@ -56,6 +56,20 @@ $ exe/scarpe-wasm --dev button_alert.rb
 
 This will build a default Wasm package for the Scarpe libraries but no additional gems, and then start a web server running your application with that default package. It will also open a Google Chrome tab pointed at that server.
 
+### Using Docker
+
+Make sure you have Docker installed and running. Then, run the following command:
+
+to build
+
+```bash
+$ docker build -t scarpe-wasm .
+```
+
+```bash
+$ docker run -it --rm -p 8080:8080 scarpe-wasm
+```
+
 ## Usage: Packaging a Wasm App
 
 Scarpe-Wasm allows you to package an application into packed Wasm code and an HTML loading page. Note that this won't work with gems that use native extensions - we can't easily translate them into WebAssembly.
