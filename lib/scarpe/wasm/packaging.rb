@@ -216,7 +216,7 @@ module Scarpe::Wasm::Packaging
     # But it needs an HTML index file to load the app, and the app must be available
     # where an HTTP server can see it.
     def build_app_index(app_file)
-      app_file_dir = File.dirname(app_file)
+      app_file_dir = File.dirname(File.expand_path app_file)
       app_name = File.basename(app_file)
       if app_file_dir != @app_dir
         FileUtils.cp app_file, "#{@install_dir}/#{app_name}"

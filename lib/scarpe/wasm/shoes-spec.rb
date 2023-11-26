@@ -57,7 +57,7 @@ module Scarpe::Wasm
     def run_shoes_spec_code(index_uri = nil)
       visit(index_uri) if index_uri
 
-      if has_selector?("#wrapper-wvroot div", wait: 10)
+      if has_selector?("#wrapper-wvroot div", wait: 10, visible: :all)
         # Load Shoes-Spec test code into the browser as Wasm
         page.execute_script "window.RubyVM.eval('require \"js\"; require \"scarpe/wasm/shoes-spec-browser\"')"
 

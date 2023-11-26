@@ -142,9 +142,9 @@ when "run"
   index_name = pkg.build_app_index(verb_target)
   index_url = "http://localhost:8080/#{index_name}"
   puts "URL: #{index_url}"
-  system("open -a \"Google Chrome\" #{index_url}")
 
   if verb_target.end_with?(".rb")
+    system("open -a \"Google Chrome\" #{index_url}")
     # Let the HTTP server run until the user cancels it
     Scarpe::Wasm::HTTPServer.new(dir: pkg.install_dir, port: 8080).start
   elsif verb_target.end_with?(".sspec") || verb_target.end_with?(".scas")
@@ -181,9 +181,14 @@ when "run"
       Capybara.run_server = false
       Capybara.app_host = "http://localhost:8080"
 
+      puts "\nTo manually view the Shoes app for this test, run:"
+      puts "  * (in #{File.expand_path Dir.pwd}) ruby -run -e httpd . -p 8080"
+      puts "  * open -a \"Google Chrome\" #{index_url}"
+      puts
+
       class RunCommandLineShoesSpecTests < Scarpe::Wasm::CapybaraTestCase; end
       RunCommandLineShoesSpecTests.define_method("test_command_line") do
-        run_shoes_spec_code("http://localhost:8080/#{verb_target}") { eval test_code }
+        run_shoes_spec_code(index_url) { eval test_code }
       end
       Minitest.run []
     ensure
