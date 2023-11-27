@@ -23,7 +23,7 @@ class ShoesSpecBrowser
   def create_query_proxy(id, drawable_type, query_by)
     if drawable_type
       d_class = drawable_type ? Shoes::Drawable.drawable_class_by_name(drawable_type) : nil
-      drawables = Shoes::App.instance.find_drawables_by([d_class, *query_by].compact)
+      drawables = Shoes::App.instance.find_drawables_by(*[d_class, *query_by].compact)
       raise Shoes::Errors::MultipleDrawablesFoundError, "Found more than one #{drawable_type} matching #{query_by.inspect}!" if drawables.size > 1
       raise Shoes::Errors::NoDrawablesFoundError, "Found no #{drawable_type} matching #{query_by.inspect}!" if drawables.empty?
       drawable = drawables[0]
