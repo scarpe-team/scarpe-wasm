@@ -150,7 +150,7 @@ module Scarpe::Wasm
         d_class = Shoes::Drawable.drawable_class_by_name(drawable_type)
         raise(NoDrawablesFoundError, "Can't find Drawable class for #{drawable_type.inspect}!") if d_class.nil?
 
-        d_class.shoes_style_names.each do |style_name|
+        d_class.shoes_style_names(with_features: :all).each do |style_name|
           s_class.define_method(style_name) do
             js_conn.ruby_eval("ShoesSpecBrowser.instance.proxy_method(#{@id}, #{style_name.inspect}, [])")
           end
