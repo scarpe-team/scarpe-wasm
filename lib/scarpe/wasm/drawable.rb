@@ -57,6 +57,7 @@ module Scarpe::Wasm
       # Must call this before bind
       super(linkable_id: @shoes_linkable_id)
 
+      # This should only happen on reparent, which should rarely or never happen
       bind_shoes_event(event_name: "parent", target: shoes_linkable_id) do |new_parent_id|
         display_parent = DisplayService.instance.query_display_drawable_for(new_parent_id)
         if @parent != display_parent
