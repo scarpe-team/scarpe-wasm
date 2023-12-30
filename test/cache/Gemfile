@@ -10,6 +10,6 @@ gem "lacci", github: "scarpe-team/scarpe", glob: "lacci/*.gemspec"
 
 gem "scarpe-wasm", path: "../.."
 
-gem "wasify", github: "AlawysDelta/wasify" #path: "../../../wasify"
+gem "wasify", github: "AlawysDelta/wasify", branch: "ruby_3_3_and_later_ruby_wasm" #path: "../../../wasify"
 
 gem "webrick" # to use "ruby -run -e httpd"
