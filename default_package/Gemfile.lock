@@ -1,8 +1,9 @@
 GIT
   remote: https://github.com/AlawysDelta/wasify.git
-  revision: 878904d46837395682e4f108723cad399b308050
+  revision: 90ca7a9489ef3b30c4966dfe39aa913ab3e5eaeb
+  branch: use_specific_release_version
   specs:
-    wasify (0.1.1)
+    wasify (0.1.2)
 
 GIT
   remote: https://github.com/scarpe-team/scarpe.git

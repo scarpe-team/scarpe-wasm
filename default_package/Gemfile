@@ -7,6 +7,6 @@ gem "lacci", github: "scarpe-team/scarpe", glob: "lacci/*.gemspec"
 gem "scarpe-wasm", path: ".."
 
 # Technically we could remove this with some work - don't need wasify in ruby.wasm package
-gem "wasify", github: "AlawysDelta/wasify"
+gem "wasify", github: "AlawysDelta/wasify", branch: "use_specific_release_version"
 
 # What other gems should we assume we need?
