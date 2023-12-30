@@ -88,16 +88,15 @@ module Scarpe::Wasm
       end
       display_drawable = display_class.new(properties)
       set_drawable_pairing(drawable_id, display_drawable)
+      if parent_id
+        display_parent = query_display_drawable_for(parent_id, nil_ok: true)
+        display_drawable.set_parent display_parent if display_parent
+      end
 
       if drawable_class_name == "DocumentRoot"
         # DocumentRoot is created before App. Mostly doc_root is just like any other drawable,
         # but we'll want a reference to it when we create App.
         @doc_root = display_drawable
-      end
-
-      if parent_id
-        display_parent = query_display_drawable_for(drawable_id, nil_ok: true)
-        display_drawable.set_parent display_parent
       end
 
       display_drawable

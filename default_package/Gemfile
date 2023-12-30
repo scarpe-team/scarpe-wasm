@@ -4,9 +4,13 @@ source "https://rubygems.org"
 gem "scarpe-components", github: "scarpe-team/scarpe", glob: "scarpe-components/*.gemspec"
 gem "lacci", github: "scarpe-team/scarpe", glob: "lacci/*.gemspec"
 
+#gem "scarpe-components", path: "../../scarpe/scarpe-components"
+#gem "lacci", path: "../../scarpe/lacci"
+
 gem "scarpe-wasm", path: ".."
 
 # Technically we could remove this with some work - don't need wasify in ruby.wasm package
-gem "wasify", github: "AlawysDelta/wasify", branch: "use_specific_release_version"
+gem "wasify", github: "AlawysDelta/wasify", branch: "ruby_3_3_and_later_ruby_wasm"
+#gem "wasify", path: "../../wasify"
 
 # What other gems should we assume we need?

@@ -210,6 +210,9 @@ module Scarpe::Wasm
     # @return [String] the rendered HTML
     def to_html
       @children ||= []
+      if @children.include?(self)
+        raise "Something is very wrong! Exiting."
+      end
       child_markup = @children.map(&:to_html).join
       if respond_to?(:element)
         element { child_markup }

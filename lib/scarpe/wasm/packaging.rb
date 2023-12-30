@@ -184,7 +184,7 @@ module Scarpe::Wasm::Packaging
     def app_index_text(app_file_url)
       <<~INDEX_HTML
         <html>
-        <script src="https://cdn.jsdelivr.net/npm/@ruby/wasm-wasi@latest/dist/browser.umd.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@ruby/wasm-wasi@#{ENV["WS_RUBY_WASM_VERSION"] || "latest"}/dist/browser.umd.js"></script>
         <script>
           const { DefaultRubyVM } = window["ruby-wasm-wasi"];
           const main = async () => {

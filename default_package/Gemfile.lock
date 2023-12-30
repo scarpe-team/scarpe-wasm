@@ -1,13 +1,13 @@
 GIT
   remote: https://github.com/AlawysDelta/wasify.git
-  revision: 90ca7a9489ef3b30c4966dfe39aa913ab3e5eaeb
-  branch: use_specific_release_version
+  revision: b39a34c9ff6832a7b60c813a2419bbe0bc53da23
+  branch: ruby_3_3_and_later_ruby_wasm
   specs:
     wasify (0.1.2)
 
 GIT
   remote: https://github.com/scarpe-team/scarpe.git
-  revision: ae5bb8623da22c8391ab8adaa1d5e3919a7cf6e3
+  revision: b964be2b43cbb62e8c2b12138a2aae2f01912550
   glob: lacci/*.gemspec
   specs:
     lacci (0.3.0)
@@ -15,7 +15,7 @@ GIT
 
 GIT
   remote: https://github.com/scarpe-team/scarpe.git
-  revision: ae5bb8623da22c8391ab8adaa1d5e3919a7cf6e3
+  revision: b964be2b43cbb62e8c2b12138a2aae2f01912550
   glob: scarpe-components/*.gemspec
   specs:
     scarpe-components (0.3.0)
