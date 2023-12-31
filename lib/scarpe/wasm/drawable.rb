@@ -187,7 +187,7 @@ module Scarpe::Wasm
     #
     # @return [Scarpe::WebWrangler::ElementWrangler] a DOM object manager
     def html_element
-      @elt_wrangler ||= Scarpe::WebWrangler::ElementWrangler.new(html_id)
+      @elt_wrangler ||= Scarpe::WebWrangler::ElementWrangler.new(html_id:)
     end
 
     # Return a promise that guarantees all currently-requested changes have completed
