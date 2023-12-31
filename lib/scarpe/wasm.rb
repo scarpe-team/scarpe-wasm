@@ -36,7 +36,6 @@ require_relative "wasm/list_box"
 require_relative "wasm/shape"
 
 require_relative "wasm/text_drawable"
-require_relative "wasm/span"
 require_relative "wasm/link"
 require_relative "wasm/video"
 require_relative "wasm/check"
