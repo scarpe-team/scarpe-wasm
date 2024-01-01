@@ -58,7 +58,7 @@ module Scarpe::Wasm
   end
 
   class << self
-    def default_wv_text_drawable_with_tag(shoes_tag, html_tag = nil)
+    def default_wasm_text_drawable_with_tag(shoes_tag, html_tag = nil)
       html_tag ||= shoes_tag
       wasm_class_name = shoes_tag.capitalize
       wasm_drawable_class = Class.new(Scarpe::Wasm::TextDrawable) do
@@ -78,11 +78,11 @@ module Scarpe::Wasm
   end
 end
 
-Scarpe::Wasm.default_wv_text_drawable_with_tag(:code)
-Scarpe::Wasm.default_wv_text_drawable_with_tag(:del)
-Scarpe::Wasm.default_wv_text_drawable_with_tag(:em)
-Scarpe::Wasm.default_wv_text_drawable_with_tag(:strong)
-Scarpe::Wasm.default_wv_text_drawable_with_tag(:span)
-Scarpe::Wasm.default_wv_text_drawable_with_tag(:sub)
-Scarpe::Wasm.default_wv_text_drawable_with_tag(:sup)
-Scarpe::Wasm.default_wv_text_drawable_with_tag(:ins, "span") # Styled in Shoes, not CSS
+Scarpe::Wasm.default_wasm_text_drawable_with_tag(:code)
+Scarpe::Wasm.default_wasm_text_drawable_with_tag(:del)
+Scarpe::Wasm.default_wasm_text_drawable_with_tag(:em)
+Scarpe::Wasm.default_wasm_text_drawable_with_tag(:strong)
+Scarpe::Wasm.default_wasm_text_drawable_with_tag(:span)
+Scarpe::Wasm.default_wasm_text_drawable_with_tag(:sub)
+Scarpe::Wasm.default_wasm_text_drawable_with_tag(:sup)
+Scarpe::Wasm.default_wasm_text_drawable_with_tag(:ins, "span") # Styled in Shoes, not CSS
