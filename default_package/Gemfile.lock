@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/AlawysDelta/wasify.git
-  revision: 53196a7e23e9cbfbcb03cfa5a7ae94eb2e0f73bf
+  revision: 50c2c2dbb8db40b9c3720533266deb1041bdc4cd
   branch: ruby_3_3_and_later_ruby_wasm
   specs:
     wasify (0.1.2)
